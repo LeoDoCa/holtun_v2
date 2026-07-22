@@ -45,7 +45,8 @@ public class SecurityConfig {
             "/api/products/filter",
             "/api/categories",
             "/api/categories/{uuid}",
-            "/api/files/**"
+            "/api/files/**",
+            "/uploads/**"    
     };
 
     @Bean

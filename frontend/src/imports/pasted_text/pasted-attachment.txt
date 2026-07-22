@@ -1,0 +1,357 @@
+Diseña un sitio web completo para una empresa llamada HOLTÚN, un centro holístico especializado en productos naturales, aceites esenciales, mieles y bienestar.
+
+El objetivo principal del sitio es funcionar como un catálogo digital elegante, donde los clientes puedan explorar los productos de la empresa de manera intuitiva y atractiva. No será una tienda en línea; únicamente un catálogo para mostrar información de los productos.
+
+Concepto de Diseño
+
+Quiero un diseño que transmita:
+
+Elegancia
+Armonía
+Exclusividad
+Bienestar
+Naturaleza
+Pureza
+Paz
+Sofisticación
+Equilibrio
+Sinergia
+
+Debe sentirse como una marca premium, inspirada en spas de lujo, centros holísticos modernos y marcas de cosmética natural de alta gama.
+
+El diseño debe ser limpio, minimalista y con mucho espacio en blanco. Quiero que la experiencia transmita tranquilidad desde el primer momento.
+
+No quiero un diseño genérico de Bootstrap. Debe parecer diseñado por un diseñador UX/UI profesional.
+
+Identidad visual
+Tipografía
+
+Tipografía principal:
+Raleway
+
+Tipografía secundaria:
+Montserrat
+
+Utiliza una jerarquía tipográfica moderna, elegante y bien definida.
+
+Colores
+
+Color principal
+
+Verde
+#799E7B
+
+Color secundario
+
+Blanco
+#FFFFFF
+
+Puedes utilizar variaciones suaves del verde para fondos, tarjetas, hover, sombras y secciones.
+
+También puedes utilizar tonos muy claros de gris únicamente para separar secciones si es necesario.
+
+Estilo visual
+
+Inspirarse en sitios web premium de:
+
+cosmética natural
+wellness
+spa
+aromaterapia
+aceites esenciales
+marcas orgánicas
+
+Usar:
+
+bordes redondeados
+sombras muy suaves
+tarjetas modernas
+imágenes grandes
+iconografía minimalista
+fondos con degradados muy sutiles
+mucho espacio negativo
+microinteracciones
+efectos glassmorphism ligeros donde tengan sentido
+transiciones suaves
+
+Todo debe sentirse elegante y armonioso.
+
+Animaciones
+
+Agregar propuestas de animaciones como:
+
+Fade In
+Scroll Reveal
+Hover elegante sobre tarjetas
+Elevación de cards
+Botones con animaciones suaves
+Aparición de imágenes
+Transiciones entre páginas
+Animaciones de carga
+Menú responsive animado
+
+Las animaciones deben ser sutiles y premium, nunca exageradas.
+
+Responsive
+
+El sitio debe ser completamente responsive.
+
+Diseñar versiones para:
+
+Desktop
+Tablet
+Mobile
+
+La navegación debe adaptarse perfectamente.
+
+Estructura del sitio
+Inicio
+
+Debe incluir:
+
+Hero principal
+
+Con una imagen grande relacionada con:
+
+aceites esenciales
+naturaleza
+hojas
+bienestar
+relajación
+
+Título llamativo.
+
+Botón:
+
+"Explorar catálogo"
+
+Debajo mostrar una breve introducción de Holtún.
+
+Sobre Nosotros
+
+Mostrar el siguiente contenido de forma elegante.
+
+Sobre Nosotros
+
+HOLTÚN es un centro holístico, que nace con el propósito de restaurar el equilibrio y la paz que la vida ajetreada quita a nuestra comunidad.
+
+Con ayuda de la naturaleza y técnicas ancestrales, ofrecemos la oportunidad de llevar un estilo de vida balanceado mediante aceites esenciales, mieles infusionadas, masajes, acupuntura y más.
+
+Holtún está listo para recibirte y acompañarte en tu día a día.
+
+Misión
+
+Restaurar el balance del ajetreado estilo de vida que llevamos, ofreciendo servicios y productos de calidad. Ya sea que reserves una cita en nuestro centro holístico o consumas nuestros productos, Holtún traerá de vuelta el equilibrio que necesitabas.
+
+Visión
+
+Convertirnos en un centro holístico referente del equilibrio entre el mundo moderno y la sabiduría ancestral, acompañando cada vez a más personas a recuperar el balance vital que les pertenece.
+
+Catálogo
+
+Crear una sección principal del catálogo.
+
+Debe incluir:
+
+Buscador.
+
+Filtros.
+
+Tarjetas de productos.
+
+Cada tarjeta debe contener:
+
+imagen
+nombre
+categoría
+breve descripción
+botón "Ver más"
+Categorías
+
+Crear navegación por categorías.
+
+Las categorías son:
+
+Aceites de grado alimenticio
+Aceites de grado cosmético
+Sinergias de aceites esenciales
+Sinergias - Línea Holística
+Aceites para masajes relajantes
+Sinergias para masajes
+Sueros faciales
+Aceites vehiculares
+Mieles
+Velas
+
+Las categorías deben poder visualizarse como:
+
+chips
+pestañas
+menú lateral
+o tarjetas elegantes
+
+Escoge la opción que ofrezca mejor experiencia de usuario.
+
+Detalle del producto
+
+Cada producto debe tener una vista individual.
+
+Debe mostrar:
+
+Imagen grande.
+
+Nombre.
+
+Categoría.
+
+Descripción.
+
+Beneficios.
+
+Modo de uso.
+
+Presentaciones.
+
+Botón para regresar al catálogo.
+
+Footer
+
+Debe contener:
+
+Información de Holtún.
+
+Enlaces rápidos.
+
+Redes sociales.
+
+Contacto.
+
+Derechos reservados.
+
+Panel de Administración
+
+Crear una pequeña sección administrativa.
+
+No es necesario implementar lógica.
+
+Solo diseñar la interfaz.
+
+Pantalla de acceso
+
+Cuando un usuario intente acceder al administrador, mostrar una pantalla elegante que indique:
+
+"No contamos con un sistema de cuentas para clientes por el momento.
+
+Si deseas explorar nuestros productos puedes regresar al catálogo."
+
+Debajo colocar un botón grande:
+
+Volver al catálogo
+
+Y una sección discreta con un texto como:
+
+"¿Eres administrador?"
+
+y un botón:
+
+Ingresar al panel administrativo
+
+De esta manera se simula un acceso únicamente para administradores.
+
+Panel Administrador
+
+Crear únicamente una opción en el menú:
+
+Agregar producto
+
+Nada más.
+
+No crear usuarios.
+
+No crear dashboard complejo.
+
+No crear estadísticas.
+
+Formulario Agregar Producto
+
+Diseñar un formulario moderno.
+
+Campos:
+
+Nombre del producto
+Categoría
+Descripción
+Beneficios
+Modo de uso
+Presentación
+Imagen
+Botón Guardar
+
+Todos los campos deben tener validaciones visuales.
+
+Mostrar:
+
+errores
+mensajes de éxito
+campos requeridos
+estados de focus
+estados de hover
+validaciones en tiempo real
+
+El formulario debe verse moderno y elegante.
+
+Componentes
+
+Crear componentes reutilizables:
+
+Botones
+
+Inputs
+
+Cards
+
+Navbar
+
+Footer
+
+Modal
+
+Toast
+
+Alertas
+
+Dropdown
+
+Select
+
+Buscador
+
+Filtros
+
+Breadcrumb
+
+Paginación
+
+Estados vacíos
+
+Loader
+
+Skeleton loading
+
+UX/UI
+
+Seguir buenas prácticas de UX.
+
+Mantener:
+
+excelente jerarquía visual
+consistencia
+accesibilidad
+contraste adecuado
+tamaños adecuados
+diseño limpio
+navegación intuitiva
+experiencia premium
+Objetivo final
+
+El resultado debe parecer un sitio web profesional listo para producción, con una identidad visual sólida y memorable. La experiencia debe transmitir calma, confianza, lujo y conexión con la naturaleza, evitando cualquier apariencia genérica o de plantilla. Cada pantalla debe sentirse cuidadosamente diseñada, con una estética refinada y coherente, utilizando animaciones sutiles, una excelente organización visual y un enfoque claro en la usabilidad y la elegancia. El diseño debe ser completamente responsive y ofrecer una experiencia moderna y fluida tanto para clientes como para el administrador.
