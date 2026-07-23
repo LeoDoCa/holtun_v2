@@ -16,6 +16,29 @@ import logo2 from "@/imports/2.png";
 import logo3 from "@/imports/3.png";
 import { productService, categoryService, authService, fileUrl } from "@/app/services/api";
 
+const SUSPICIOUS_PATTERN =
+  /(--|;|\/\*|\*\/|\bxp_\w+|\bexec(\s|\()|\bunion\s+select\b|\bselect\s+.+\s+from\b|\binsert\s+into\b|\bdrop\s+(table|database)\b|\bupdate\s+.+\s+set\b|\bdelete\s+from\b|<\s*script|on\w+\s*=)/i;
+
+interface ValidationResult { valid: boolean; error?: string; }
+
+function validateUsername(value: string): ValidationResult {
+  const trimmed = value.trim();
+  if (!trimmed) return { valid: false, error: "Ingresa un usuario" };
+  if (!/^[a-zA-Z0-9_.-]{3,32}$/.test(trimmed)) {
+    return { valid: false, error: "Usuario inválido (3-32 caracteres: letras, números, punto, guion o guion bajo)" };
+  }
+  if (SUSPICIOUS_PATTERN.test(trimmed)) {
+    return { valid: false, error: "Usuario contiene caracteres no permitidos" };
+  }
+  return { valid: true };
+}
+
+function validatePassword(value: string): ValidationResult {
+  if (!value) return { valid: false, error: "Ingresa una contraseña" };
+  if (value.length > 128) return { valid: false, error: "La contraseña es demasiado larga" };
+  return { valid: true };
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type Page = "home" | "catalog" | "product" | "admin-gate" | "admin";
@@ -35,7 +58,7 @@ interface Product {
   description: string;
   price: number;
   stock: number;
-  images: string[];     
+  images: string[];
   rawImages: string[];
 }
 
@@ -109,66 +132,106 @@ const I = {
 const cat = (uuid: string) => CATEGORIES.find((c) => c.uuid === uuid)!;
 
 const PRODUCTS: Product[] = [
-  { uuid: "prod-1", name: "Aceite de Coco Virgen", categories: [cat("cat-1")],
+  {
+    uuid: "prod-1", name: "Aceite de Coco Virgen", categories: [cat("cat-1")],
     description: "Aceite de coco virgen prensado en frío, de origen orgánico. Ideal para cocinar y repostería saludable.",
-    price: 220, stock: 42, images: [I.oilPlant, I.oilBlanket] },
-  { uuid: "prod-2", name: "Aceite de Oliva Extra Virgen", categories: [cat("cat-1")],
+    price: 220, stock: 42, images: [I.oilPlant, I.oilBlanket]
+  },
+  {
+    uuid: "prod-2", name: "Aceite de Oliva Extra Virgen", categories: [cat("cat-1")],
     description: "Aceite de oliva extra virgen de primera extracción en frío. Excepcional perfil de polifenoles.",
-    price: 280, stock: 7, images: [I.oilBlanket] },
-  { uuid: "prod-3", name: "Aceite de Argán Puro", categories: [cat("cat-2")],
+    price: 280, stock: 7, images: [I.oilBlanket]
+  },
+  {
+    uuid: "prod-3", name: "Aceite de Argán Puro", categories: [cat("cat-2")],
     description: "Aceite de argán 100% puro, prensado en frío de semillas marroquíes. El 'oro líquido' de la cosmética.",
-    price: 390, stock: 28, images: [I.serumGlass, I.serum] },
-  { uuid: "prod-4", name: "Aceite de Rosa Mosqueta", categories: [cat("cat-2")],
+    price: 390, stock: 28, images: [I.serumGlass, I.serum]
+  },
+  {
+    uuid: "prod-4", name: "Aceite de Rosa Mosqueta", categories: [cat("cat-2")],
     description: "Aceite de rosa mosqueta orgánico de Rosa canina. Reconocido por su poder regenerador.",
-    price: 340, stock: 3, images: [I.skincare] },
-  { uuid: "prod-5", name: "Sinergia Relax & Peace", categories: [cat("cat-3")],
+    price: 340, stock: 3, images: [I.skincare]
+  },
+  {
+    uuid: "prod-5", name: "Sinergia Relax & Peace", categories: [cat("cat-3")],
     description: "Blend de lavanda, vetiver y bergamota para inducir calma profunda y meditación.",
-    price: 260, stock: 55, images: [I.greenPlant, I.leaves, I.oilPlant] },
-  { uuid: "prod-6", name: "Sinergia Energía Vital", categories: [cat("cat-3")],
+    price: 260, stock: 55, images: [I.greenPlant, I.leaves, I.oilPlant]
+  },
+  {
+    uuid: "prod-6", name: "Sinergia Energía Vital", categories: [cat("cat-3")],
     description: "Menta, romero y limón para revitalizar mente y cuerpo desde la mañana.",
-    price: 240, stock: 0, images: [I.leaves] },
-  { uuid: "prod-7", name: "Sinergia Chakra Balance", categories: [cat("cat-4")],
+    price: 240, stock: 0, images: [I.leaves]
+  },
+  {
+    uuid: "prod-7", name: "Sinergia Chakra Balance", categories: [cat("cat-4")],
     description: "Blend ancestral de sándalo, incienso, rosa y ylang ylang para los 7 centros de energía.",
-    price: 310, stock: 18, images: [I.serumGlass, I.greenPlant] },
-  { uuid: "prod-8", name: "Sinergia Luna Llena", categories: [cat("cat-4")],
+    price: 310, stock: 18, images: [I.serumGlass, I.greenPlant]
+  },
+  {
+    uuid: "prod-8", name: "Sinergia Luna Llena", categories: [cat("cat-4")],
     description: "Jazmín, salvia, mirra y cedro para ceremonias de luna llena e introspección.",
-    price: 290, stock: 31, images: [I.greenPlant] },
-  { uuid: "prod-9", name: "Masaje Lavanda & Vainilla", categories: [cat("cat-5")],
+    price: 290, stock: 31, images: [I.greenPlant]
+  },
+  {
+    uuid: "prod-9", name: "Masaje Lavanda & Vainilla", categories: [cat("cat-5")],
     description: "Base de jojoba y almendras con lavanda y vainilla. Textura sedosa, deslizamiento perfecto.",
-    price: 320, stock: 45, images: [I.oilPlant, I.oilBlanket] },
-  { uuid: "prod-10", name: "Masaje Eucalipto & Menta", categories: [cat("cat-5")],
+    price: 320, stock: 45, images: [I.oilPlant, I.oilBlanket]
+  },
+  {
+    uuid: "prod-10", name: "Masaje Eucalipto & Menta", categories: [cat("cat-5")],
     description: "Eucalipto y menta para masajes deportivos y recuperación muscular.",
-    price: 300, stock: 2, images: [I.oilBlanket] },
-  { uuid: "prod-11", name: "Sinergia Muscular Profunda", categories: [cat("cat-6")],
+    price: 300, stock: 2, images: [I.oilBlanket]
+  },
+  {
+    uuid: "prod-11", name: "Sinergia Muscular Profunda", categories: [cat("cat-6")],
     description: "Romero, gaulteria y pimiento negro concentrados para acción muscular profunda.",
-    price: 270, stock: 16, images: [I.serum] },
-  { uuid: "prod-12", name: "Sinergia Antiestrés Total", categories: [cat("cat-6")],
+    price: 270, stock: 16, images: [I.serum]
+  },
+  {
+    uuid: "prod-12", name: "Sinergia Antiestrés Total", categories: [cat("cat-6")],
     description: "Lavanda, manzanilla romana, neroli y cedro para disolver la tensión acumulada.",
-    price: 285, stock: 22, images: [I.greenPlant, I.serum] },
-  { uuid: "prod-13", name: "Suero Vitamina C Luminoso", categories: [cat("cat-7")],
+    price: 285, stock: 22, images: [I.greenPlant, I.serum]
+  },
+  {
+    uuid: "prod-13", name: "Suero Vitamina C Luminoso", categories: [cat("cat-7")],
     description: "Vitamina C estabilizada al 15% con rosa mosqueta y granada. Luminosidad inmediata.",
-    price: 520, stock: 38, images: [I.serum, I.serumGlass] },
-  { uuid: "prod-14", name: "Suero Regenerador Nocturno", categories: [cat("cat-7")],
+    price: 520, stock: 38, images: [I.serum, I.serumGlass]
+  },
+  {
+    uuid: "prod-14", name: "Suero Regenerador Nocturno", categories: [cat("cat-7")],
     description: "Bakuchiol, argán y péptidos de seda. Regenera y rejuvenece mientras descansas.",
-    price: 580, stock: 5, images: [I.skincare] },
-  { uuid: "prod-15", name: "Aceite Vehicular de Jojoba", categories: [cat("cat-8")],
+    price: 580, stock: 5, images: [I.skincare]
+  },
+  {
+    uuid: "prod-15", name: "Aceite Vehicular de Jojoba", categories: [cat("cat-8")],
     description: "Jojoba dorada, cera líquida que imita el sebo natural. Base ideal para aceites esenciales.",
-    price: 190, stock: 60, images: [I.serumGlass] },
-  { uuid: "prod-16", name: "Aceite de Almendras Dulces", categories: [cat("cat-8")],
+    price: 190, stock: 60, images: [I.serumGlass]
+  },
+  {
+    uuid: "prod-16", name: "Aceite de Almendras Dulces", categories: [cat("cat-8")],
     description: "Almendras dulces prensadas en frío, suave y profundamente nutritivo. El portador universal.",
-    price: 175, stock: 0, images: [I.oilBlanket, I.oilPlant] },
-  { uuid: "prod-17", name: "Miel Infusionada de Lavanda", categories: [cat("cat-9")],
+    price: 175, stock: 0, images: [I.oilBlanket, I.oilPlant]
+  },
+  {
+    uuid: "prod-17", name: "Miel Infusionada de Lavanda", categories: [cat("cat-9")],
     description: "Miel artesanal con flores de lavanda orgánica. Dulzor natural con propiedades calmantes.",
-    price: 160, stock: 25, images: [I.honeyJar, I.honeyDip] },
-  { uuid: "prod-18", name: "Miel de Canela & Jengibre", categories: [cat("cat-9")],
+    price: 160, stock: 25, images: [I.honeyJar, I.honeyDip]
+  },
+  {
+    uuid: "prod-18", name: "Miel de Canela & Jengibre", categories: [cat("cat-9")],
     description: "Miel artesanal con canela de Ceilán y jengibre fresco. Combinación antiinflamatoria ancestral.",
-    price: 165, stock: 11, images: [I.honeyDip] },
-  { uuid: "prod-19", name: "Vela Sándalo & Cedro", categories: [cat("cat-10")],
+    price: 165, stock: 11, images: [I.honeyDip]
+  },
+  {
+    uuid: "prod-19", name: "Vela Sándalo & Cedro", categories: [cat("cat-10")],
     description: "Cera de soya con sándalo y cedro. Aroma amaderado, cálido y sofisticado.",
-    price: 210, stock: 34, images: [I.candle1, I.candle2] },
-  { uuid: "prod-20", name: "Vela Florece · Jazmín & Neroli", categories: [cat("cat-10")],
+    price: 210, stock: 34, images: [I.candle1, I.candle2]
+  },
+  {
+    uuid: "prod-20", name: "Vela Florece · Jazmín & Neroli", categories: [cat("cat-10")],
     description: "Cera de soya con jazmín, neroli y rosa damascena. Experiencia floral y delicada.",
-    price: 230, stock: 8, images: [I.candle2] },
+    price: 230, stock: 8, images: [I.candle2]
+  },
 ];
 
 // ─── Motion preset ────────────────────────────────────────────────────────────
@@ -273,9 +336,8 @@ function Navbar({
         <div className="hidden md:flex items-center gap-8">
           {links.map((l) => (
             <button key={l.label} onClick={() => navigate(l.page, l.anchor)}
-              className={`font-opensans text-[11px] tracking-[0.18em] uppercase transition-all duration-300 relative pb-0.5 flex items-center gap-1.5 ${
-                isActive(l) ? activeColor : linkColor
-              }`}>
+              className={`font-opensans text-[11px] tracking-[0.18em] uppercase transition-all duration-300 relative pb-0.5 flex items-center gap-1.5 ${isActive(l) ? activeColor : linkColor
+                }`}>
               {l.label}
               {isActive(l) && (
                 <motion.div layoutId="nav-ul" className={`absolute -bottom-1 inset-x-0 h-px ${isHome && !scrolled ? "bg-white" : "bg-primary"}`} />
@@ -290,27 +352,25 @@ function Navbar({
           <a href={WA_URL} target="_blank" rel="noopener noreferrer"
             className="hidden md:flex items-center gap-2 font-opensans text-[11px] tracking-[0.12em] uppercase px-4 py-2 rounded-full transition-all duration-300 bg-[#25D366] text-white hover:bg-[#1ebe5d] shadow-sm shadow-[#25D366]/30"
             title="Pedir informes por WhatsApp">
-            <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.136.561 4.14 1.535 5.877L.057 23.882l6.19-1.454A11.934 11.934 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.93 0-3.734-.5-5.31-1.373l-.38-.225-3.676.864.927-3.588-.247-.392A9.937 9.937 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" /><path d="M12 0C5.373 0 0 5.373 0 12c0 2.136.561 4.14 1.535 5.877L.057 23.882l6.19-1.454A11.934 11.934 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.93 0-3.734-.5-5.31-1.373l-.38-.225-3.676.864.927-3.588-.247-.392A9.937 9.937 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z" /></svg>
             WhatsApp
           </a>
 
           {/* Dark mode toggle */}
           <button onClick={toggleDark}
-            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 ${
-              isHome && !scrolled
-                ? "text-white/70 hover:text-white hover:bg-white/10"
-                : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-            }`}>
+            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 ${isHome && !scrolled
+              ? "text-white/70 hover:text-white hover:bg-white/10"
+              : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+              }`}>
             {isDark ? <Sun size={17} /> : <Moon size={17} />}
           </button>
 
           {/* Profile / Admin icon */}
           <button onClick={() => navigate("admin-gate")}
-            className={`hidden md:flex w-9 h-9 rounded-full items-center justify-center transition-all duration-300 ${
-              isHome && !scrolled
-                ? "text-white/60 hover:text-white hover:bg-white/10"
-                : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-            }`}
+            className={`hidden md:flex w-9 h-9 rounded-full items-center justify-center transition-all duration-300 ${isHome && !scrolled
+              ? "text-white/60 hover:text-white hover:bg-white/10"
+              : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+              }`}
             title="Perfil">
             <UserCircle size={19} />
           </button>
@@ -340,7 +400,7 @@ function Navbar({
               ))}
               <a href={WA_URL} target="_blank" rel="noopener noreferrer"
                 className="font-opensans text-[11px] tracking-[0.18em] uppercase text-left text-[#25D366] flex items-center gap-2">
-                <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.136.561 4.14 1.535 5.877L.057 23.882l6.19-1.454A11.934 11.934 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.93 0-3.734-.5-5.31-1.373l-.38-.225-3.676.864.927-3.588-.247-.392A9.937 9.937 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+                <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" /><path d="M12 0C5.373 0 0 5.373 0 12c0 2.136.561 4.14 1.535 5.877L.057 23.882l6.19-1.454A11.934 11.934 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.93 0-3.734-.5-5.31-1.373l-.38-.225-3.676.864.927-3.588-.247-.392A9.937 9.937 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z" /></svg>
                 WhatsApp
               </a>
               <button onClick={() => { navigate("admin-gate"); setOpen(false); }}
@@ -458,7 +518,7 @@ function ProductCard({ product, onClick }: { product: Product; onClick: () => vo
               onClick={(e) => e.stopPropagation()}
               className="w-7 h-7 rounded-full bg-[#25D366]/10 text-[#25D366] flex items-center justify-center hover:bg-[#25D366] hover:text-white transition-all duration-200"
               title={`Preguntar por ${product.name}`}>
-              <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.136.561 4.14 1.535 5.877L.057 23.882l6.19-1.454A11.934 11.934 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.93 0-3.734-.5-5.31-1.373l-.38-.225-3.676.864.927-3.588-.247-.392A9.937 9.937 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+              <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" /><path d="M12 0C5.373 0 0 5.373 0 12c0 2.136.561 4.14 1.535 5.877L.057 23.882l6.19-1.454A11.934 11.934 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.93 0-3.734-.5-5.31-1.373l-.38-.225-3.676.864.927-3.588-.247-.392A9.937 9.937 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z" /></svg>
             </a>
             <span className="font-opensans text-[10px] tracking-[0.12em] uppercase text-primary flex items-center gap-1 group-hover:gap-1.5 transition-all">
               Ver más <ChevronRight size={10} />
@@ -489,7 +549,7 @@ function HomePage({ navigate }: { navigate: (p: Page) => void }) {
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0">
           <img src={I.hero} alt="Naturaleza y bienestar" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-foreground/45" />
+          <div className="absolute inset-0 bg-black/45" />
           <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/60" />
         </div>
         <motion.div
@@ -731,11 +791,10 @@ function CatalogPage({ navigate, setProduct }: { navigate: (p: Page) => void; se
                     const Icon = CATEGORY_ICONS[cat.name] ?? Package;
                     return (
                       <button key={cat.uuid} onClick={() => setActive(cat.name)}
-                        className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-all duration-200 ${
-                          active === cat.name
-                            ? "bg-primary text-white shadow-sm shadow-primary/20"
-                            : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-                        }`}>
+                        className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-all duration-200 ${active === cat.name
+                          ? "bg-primary text-white shadow-sm shadow-primary/20"
+                          : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                          }`}>
                         <Icon size={13} className="shrink-0" />
                         <span className="font-opensans text-xs leading-tight">{cat.name}</span>
                       </button>
@@ -755,11 +814,10 @@ function CatalogPage({ navigate, setProduct }: { navigate: (p: Page) => void; se
                   const Icon = CATEGORY_ICONS[cat.name] ?? Package;
                   return (
                     <button key={cat.uuid} onClick={() => setActive(cat.name)}
-                      className={`font-opensans text-[10px] tracking-wide px-3.5 py-2 rounded-full border transition-all flex items-center gap-1.5 ${
-                        active === cat.name
-                          ? "bg-primary border-primary text-white shadow-sm shadow-primary/20"
-                          : "bg-card border-border text-muted-foreground hover:border-primary/40 hover:text-primary"
-                      }`}>
+                      className={`font-opensans text-[10px] tracking-wide px-3.5 py-2 rounded-full border transition-all flex items-center gap-1.5 ${active === cat.name
+                        ? "bg-primary border-primary text-white shadow-sm shadow-primary/20"
+                        : "bg-card border-border text-muted-foreground hover:border-primary/40 hover:text-primary"
+                        }`}>
                       <Icon size={10} /> {cat.name}
                     </button>
                   );
@@ -795,7 +853,7 @@ function CatalogPage({ navigate, setProduct }: { navigate: (p: Page) => void; se
                   <a href="https://wa.me/525516905076?text=Hola%2C%20me%20gustar%C3%ADa%20conocer%20sus%20productos%20disponibles."
                     target="_blank" rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 bg-[#25D366] text-white px-5 py-2.5 rounded-full hover:bg-[#1ebe5d] transition-colors font-opensans text-[10px] tracking-[0.12em] uppercase">
-                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.136.561 4.14 1.535 5.877L.057 23.882l6.19-1.454A11.934 11.934 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.93 0-3.734-.5-5.31-1.373l-.38-.225-3.676.864.927-3.588-.247-.392A9.937 9.937 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" /><path d="M12 0C5.373 0 0 5.373 0 12c0 2.136.561 4.14 1.535 5.877L.057 23.882l6.19-1.454A11.934 11.934 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.93 0-3.734-.5-5.31-1.373l-.38-.225-3.676.864.927-3.588-.247-.392A9.937 9.937 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z" /></svg>
                     Consultar por WhatsApp
                   </a>
                 </motion.div>
@@ -908,7 +966,7 @@ function ProductPage({ product, navigate }: { product: Product; navigate: (p: Pa
               href={`https://wa.me/525516905076?text=${encodeURIComponent(`Hola, me gustaría pedir informes sobre el producto: ${product.name}`)}`}
               target="_blank" rel="noopener noreferrer"
               className="mt-2 inline-flex items-center gap-2 bg-[#25D366] text-white px-4 py-2.5 rounded-full hover:bg-[#1ebe5d] transition-colors shadow-sm shadow-[#25D366]/20 font-opensans text-[10px] tracking-[0.12em] uppercase w-fit">
-              <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5 shrink-0"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.136.561 4.14 1.535 5.877L.057 23.882l6.19-1.454A11.934 11.934 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.93 0-3.734-.5-5.31-1.373l-.38-.225-3.676.864.927-3.588-.247-.392A9.937 9.937 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+              <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5 shrink-0"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" /><path d="M12 0C5.373 0 0 5.373 0 12c0 2.136.561 4.14 1.535 5.877L.057 23.882l6.19-1.454A11.934 11.934 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.93 0-3.734-.5-5.31-1.373l-.38-.225-3.676.864.927-3.588-.247-.392A9.937 9.937 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z" /></svg>
               Informes
             </a>
           </motion.div>
@@ -926,10 +984,21 @@ function AdminGatePage({ navigate }: { navigate: (p: Page) => void }) {
   const [pass, setPass] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState(false);
+  const [fieldError, setFieldError] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-    if (!user.trim() || !pass.trim()) return;
+    const userCheck = validateUsername(user);
+    const passCheck = validatePassword(pass);
+
+    if (!userCheck.valid || !passCheck.valid) {
+      setError(true);
+      setFieldError(userCheck.error ?? passCheck.error);
+      toast.error("Datos inválidos", { description: userCheck.error ?? passCheck.error });
+      return;
+    }
+
+    setFieldError(undefined);
     setLoading(true);
     try {
       await authService.login({ username: user.trim(), password: pass });
@@ -978,7 +1047,8 @@ function AdminGatePage({ navigate }: { navigate: (p: Page) => void }) {
                 <div className="relative">
                   <UserCircle size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                   <input type="text" placeholder="Usuario"
-                    value={user} onChange={(e) => setUser(e.target.value)}
+                    value={user} maxLength={32}
+                    onChange={(e) => { setUser(e.target.value); if (error) { setError(false); setFieldError(undefined); } }}
                     onKeyDown={(e) => e.key === "Enter" && handleLogin()}
                     className={`font-opensans w-full pl-9 pr-4 py-3 bg-background border rounded-xl text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 transition-all ${error ? "border-red-400 focus:ring-red-200" : "border-border focus:ring-primary/25"}`} />
                 </div>
@@ -986,7 +1056,8 @@ function AdminGatePage({ navigate }: { navigate: (p: Page) => void }) {
                 <div className="relative">
                   <Lock size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                   <input type={showPass ? "text" : "password"} placeholder="Contraseña"
-                    value={pass} onChange={(e) => setPass(e.target.value)}
+                    value={pass} maxLength={128}
+                    onChange={(e) => { setPass(e.target.value); if (error) { setError(false); setFieldError(undefined); } }}
                     onKeyDown={(e) => e.key === "Enter" && handleLogin()}
                     className={`font-opensans w-full pl-9 pr-9 py-3 bg-background border rounded-xl text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 transition-all ${error ? "border-red-400 focus:ring-red-200" : "border-border focus:ring-primary/25"}`} />
                   <button type="button" onClick={() => setShowPass(!showPass)}
@@ -997,7 +1068,7 @@ function AdminGatePage({ navigate }: { navigate: (p: Page) => void }) {
                 {error && (
                   <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                     className="font-opensans text-xs text-red-500 flex items-center gap-1.5">
-                    <AlertCircle size={11} /> Usuario o contraseña incorrectos
+                    <AlertCircle size={11} /> {fieldError ?? "Usuario o contraseña incorrectos"}
                   </motion.p>
                 )}
                 <button onClick={handleLogin} disabled={loading || !pass || !user}
@@ -1239,8 +1310,8 @@ function InventorySection() {
     stock === 0
       ? { label: "Agotado", cls: "text-red-500 bg-red-500/10 border-red-500/20", Icon: AlertTriangle }
       : stock < 10
-      ? { label: "Bajo stock", cls: "text-amber-500 bg-amber-500/10 border-amber-500/20", Icon: TrendingDown }
-      : { label: "En stock", cls: "text-primary bg-primary/10 border-primary/20", Icon: CheckCircle2 };
+        ? { label: "Bajo stock", cls: "text-amber-500 bg-amber-500/10 border-amber-500/20", Icon: TrendingDown }
+        : { label: "En stock", cls: "text-primary bg-primary/10 border-primary/20", Icon: CheckCircle2 };
 
   const inStock = items.filter((p) => p.stock >= 10).length;
   const lowStock = items.filter((p) => p.stock > 0 && p.stock < 10).length;
@@ -1256,7 +1327,7 @@ function InventorySection() {
     } catch {
       setItems((prev) => [...prev]);
       toast.error("Error al eliminar", { description: "No se pudo eliminar el producto. Intenta de nuevo." });
-      productService.getAll().then((data) => setItems(data.map(normalizeProduct))).catch(() => {});
+      productService.getAll().then((data) => setItems(data.map(normalizeProduct))).catch(() => { });
     }
   };
 
@@ -1412,23 +1483,27 @@ interface CatItem {
 function CategoriesSection() {
   const [cats, setCats] = useState<CatItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [totalProducts, setTotalProducts] = useState(0);
 
   const loadCategories = () => {
-  categoryService.getAll()
-    .then((data) => setCats(data.map((c) => ({
-      uuid: c.uuid,
-      name: c.name,
-      description: c.description ?? "",
-      image: c.image ? fileUrl(c.image) : undefined,
-      rawImage: c.image,
-      count: c.productCount ?? 0,
-    }))))
-    .catch(() => setCats([]))
-    .finally(() => setLoading(false));
-};
+    categoryService.getAll()
+      .then((data) => setCats(data.map((c) => ({
+        uuid: c.uuid,
+        name: c.name,
+        description: c.description ?? "",
+        image: c.image ? fileUrl(c.image) : undefined,
+        rawImage: c.image,
+        count: c.productCount ?? 0,
+      }))))
+      .catch(() => setCats([]))
+      .finally(() => setLoading(false));
+  };
 
   useEffect(() => {
     loadCategories();
+    productService.getAll()
+      .then((data) => setTotalProducts(data.length))
+      .catch(() => setTotalProducts(0));
   }, []);
 
   const [editingUuid, setEditingUuid] = useState<string | null>(null);
@@ -1475,13 +1550,13 @@ function CategoriesSection() {
       });
       setCats((prev) => prev.map((c) => c.uuid === uuid
         ? {
-            ...c,
-            name: updated.name,
-            description: updated.description ?? "",
-            image: updated.image ? fileUrl(updated.image) : undefined,
-            rawImage: updated.image,
-            count: updated.productCount ?? c.count,
-          }
+          ...c,
+          name: updated.name,
+          description: updated.description ?? "",
+          image: updated.image ? fileUrl(updated.image) : undefined,
+          rawImage: updated.image,
+          count: updated.productCount ?? c.count,
+        }
         : c
       ));
       toast.success("Categoría actualizada", { description: `"${oldName}" fue actualizada.` });
@@ -1567,7 +1642,7 @@ function CategoriesSection() {
             <Boxes size={16} className="text-primary" />
           </div>
           <div style={{ fontFamily: "'Roboto', sans-serif" }} className="text-2xl font-light text-foreground mb-1">
-            {PRODUCTS.length}
+            {totalProducts}
           </div>
           <p className="font-opensans text-xs text-muted-foreground">Productos totales</p>
         </div>
@@ -1607,9 +1682,8 @@ function CategoriesSection() {
                 onChange={(e) => { setNewName(e.target.value); if (addError) setAddError(""); }}
                 onKeyDown={(e) => { if (e.key === "Enter") handleAdd(); }}
                 placeholder="Nombre de la categoría…"
-                className={`font-opensans w-full px-4 py-2.5 bg-background border rounded-xl text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/25 transition-all ${
-                  addError ? "border-red-400" : "border-border"
-                }`}
+                className={`font-opensans w-full px-4 py-2.5 bg-background border rounded-xl text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/25 transition-all ${addError ? "border-red-400" : "border-border"
+                  }`}
               />
               {addError && (
                 <p className="font-opensans text-xs text-red-500 mt-1.5 flex items-center gap-1">
@@ -1917,10 +1991,9 @@ function AddProductSection() {
   };
 
   const ic = (f: keyof FormErrors) =>
-    `font-opensans w-full px-4 py-3 bg-background border rounded-xl text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 transition-all resize-none ${
-      touched[f as keyof AddFormData] && errors[f] ? "border-red-400 focus:ring-red-200"
+    `font-opensans w-full px-4 py-3 bg-background border rounded-xl text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 transition-all resize-none ${touched[f as keyof AddFormData] && errors[f] ? "border-red-400 focus:ring-red-200"
       : touched[f as keyof AddFormData] && !errors[f] ? "border-primary/50 focus:ring-primary/20"
-      : "border-border focus:ring-primary/20"
+        : "border-border focus:ring-primary/20"
     }`;
 
   const addImage = (file: File) => {
@@ -2074,7 +2147,7 @@ function AdminPanel({ navigate }: { navigate: (p: Page) => void }) {
           navigate("admin-gate");
         },
       },
-      cancel: { label: "Cancelar", onClick: () => {} },
+      cancel: { label: "Cancelar", onClick: () => { } },
       duration: 6000,
     });
   };
@@ -2096,11 +2169,10 @@ function AdminPanel({ navigate }: { navigate: (p: Page) => void }) {
         <nav className="p-3 flex-1 space-y-1">
           {sidebarLinks.map((l) => (
             <button key={l.id} onClick={() => setSection(l.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 font-opensans text-sm ${
-                section === l.id
-                  ? "bg-primary/20 text-primary"
-                  : "text-white/55 hover:bg-white/6 hover:text-white/80"
-              }`}>
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 font-opensans text-sm ${section === l.id
+                ? "bg-primary/20 text-primary"
+                : "text-white/55 hover:bg-white/6 hover:text-white/80"
+                }`}>
               <l.Icon size={15} />
               {l.label}
             </button>
@@ -2120,9 +2192,8 @@ function AdminPanel({ navigate }: { navigate: (p: Page) => void }) {
         <div className="md:hidden bg-[#475644] dark:bg-[#2d3829] px-5 py-4 flex items-center gap-4 overflow-x-auto">
           {sidebarLinks.map((l) => (
             <button key={l.id} onClick={() => setSection(l.id)}
-              className={`font-opensans text-[10px] tracking-wide uppercase whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all ${
-                section === l.id ? "bg-primary/25 text-primary" : "text-white/40"
-              }`}>
+              className={`font-opensans text-[10px] tracking-wide uppercase whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all ${section === l.id ? "bg-primary/25 text-primary" : "text-white/40"
+                }`}>
               <l.Icon size={10} /> {l.label}
             </button>
           ))}
