@@ -26,8 +26,11 @@ client.interceptors.response.use(
 
 // ─── Helper para URLs de imágenes ─────────────────────────────────────────────
 
-export const fileUrl = (path: string): string =>
-  path.startsWith("http") ? path : `http://localhost:8088${path}`;
+export const fileUrl = (path: string): string => {
+  if (path.startsWith("http")) return path;
+  const relative = path.replace(/^\/uploads\//, "");
+  return `${BASE_URL}files/${relative}`;
+};
 
 // ─── DTOs ─────────────────────────────────────────────────────────────────────
 
@@ -36,6 +39,7 @@ export interface CategoryDto {
   name: string;
   description?: string;
   image?: string;
+  productCount?: number;
 }
 
 export interface ProductDto {
@@ -83,8 +87,10 @@ export const authService = {
     localStorage.removeItem("holtun_token");
   },
 
-  async getMe(): Promise<UserDto> {
-    const { data } = await client.get<UserDto>("/auth/me");
+  async validateToken(token: string): Promise<AuthResponse> {
+    const { data } = await client.get<AuthResponse>("/auth/validate-token", {
+      params: { token },
+    });
     return data;
   },
 };
@@ -137,6 +143,7 @@ export const productService = {
     stock?: number;
     categoryUuids?: string[];
     images?: File[];
+    existingImagePaths?: string[];
   }): Promise<ProductDto> {
     const form = new FormData();
     if (payload.name !== undefined) form.append("name", payload.name);
@@ -145,6 +152,7 @@ export const productService = {
     if (payload.stock !== undefined) form.append("stock", String(payload.stock));
     payload.categoryUuids?.forEach((id) => form.append("categoryUuids", id));
     payload.images?.forEach((file) => form.append("images", file));
+    payload.existingImagePaths?.forEach((path) => form.append("existingImages", path));
     const { data } = await client.put<ProductDto>(`/products/${uuid}`, form);
     return data;
   },
@@ -170,12 +178,12 @@ export const categoryService = {
   async create(payload: {
     name: string;
     description?: string;
-    image?: File;
+    image: File;
   }): Promise<CategoryDto> {
     const form = new FormData();
     form.append("name", payload.name);
     if (payload.description) form.append("description", payload.description);
-    if (payload.image) form.append("image", payload.image);
+    form.append("image", payload.image);
     const { data } = await client.post<CategoryDto>("/categories", form);
     return data;
   },
@@ -184,11 +192,13 @@ export const categoryService = {
     name?: string;
     description?: string;
     image?: File;
+    existingImage?: string; 
   }): Promise<CategoryDto> {
     const form = new FormData();
     if (payload.name !== undefined) form.append("name", payload.name);
     if (payload.description !== undefined) form.append("description", payload.description);
     if (payload.image) form.append("image", payload.image);
+    if (payload.existingImage) form.append("existingImage", payload.existingImage); // ← nuevo
     const { data } = await client.put<CategoryDto>(`/categories/${uuid}`, form);
     return data;
   },

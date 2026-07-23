@@ -16,6 +16,7 @@ public class CategoryDto {
     private String name;
     private String description;
     private String image;
+    private Long productCount;
 
     public CategoryDto(UUID uuid, String name) {
         this.uuid = uuid;

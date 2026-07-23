@@ -2,6 +2,7 @@ package holtun.backend.repository;
 
 import holtun.backend.model.Category;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -24,4 +25,9 @@ public interface CategoryRepository extends JpaRepository<Category, Integer> {
     Optional<Category> findByNameIgnoreCase(String name);
 
     void deleteByUuid(UUID uuid);
+
+    @Query("SELECT c.uuid AS uuid, COUNT(p) AS count " +
+            "FROM Category c LEFT JOIN c.products p " +
+            "GROUP BY c.uuid")
+    List<Object[]> countProductsPerCategory();
 }

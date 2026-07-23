@@ -17,7 +17,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -32,8 +34,15 @@ public class CategoryService {
     public List<CategoryDto> getAllCategories() {
         log.info("Inicio de obtención de todas las categorias.");
         List<Category> categories = categoryRepository.findAll();
+
+        Map<UUID, Long> counts = categoryRepository.countProductsPerCategory().stream()
+                .collect(Collectors.toMap(
+                        row -> (UUID) row[0],
+                        row -> (Long) row[1]
+                ));
+
         log.info("Categorias obtenidas exitosamente. Total: {}", categories.size());
-        return convertToDto(categories);
+        return convertToDto(categories, counts);
     }
 
     @Transactional(readOnly = true)
@@ -45,7 +54,9 @@ public class CategoryService {
                     return new RuntimeException("Categoria no encontrada");
                 });
         log.info("Categoria obtenida exitosamente con UUID: {}", uuid);
-        return convertToDto(category);
+        CategoryDto dto = convertToDto(category);
+        dto.setProductCount((long) category.getProducts().size());
+        return dto;
     }
 
     @Transactional(rollbackFor = {SQLException.class, Exception.class})
@@ -70,7 +81,7 @@ public class CategoryService {
         log.info("Categoria registrada exitosamente con UUID: {}", savedCategory.getUuid());
 
         CategoryDto result = convertToDto(savedCategory);
-
+        result.setProductCount(0L);
         return result;
     }
 
@@ -112,7 +123,9 @@ public class CategoryService {
         Category updatedCategory = categoryRepository.save(category);
         log.info("Categoria actualizada exitosamente con UUID: {}", uuid);
 
-        return convertToDto(updatedCategory);
+        CategoryDto dtoX = convertToDto(updatedCategory);
+        dtoX.setProductCount((long) updatedCategory.getProducts().size());
+        return dtoX;
     }
 
     @Transactional(rollbackFor = {SQLException.class, Exception.class})
@@ -152,14 +165,15 @@ public class CategoryService {
         dto.setName(category.getName());
         dto.setDescription(category.getDescription());
         dto.setImage(category.getImage());
-
         return dto;
     }
 
-    private List<CategoryDto> convertToDto(List<Category> categories) {
+    private List<CategoryDto> convertToDto(List<Category> categories, Map<UUID, Long> counts) {
         List<CategoryDto> dtos = new ArrayList<>();
         for (Category category : categories) {
-            dtos.add(convertToDto(category));
+            CategoryDto dto = convertToDto(category);
+            dto.setProductCount(counts.getOrDefault(category.getUuid(), 0L));
+            dtos.add(dto);
         }
         return dtos;
     }

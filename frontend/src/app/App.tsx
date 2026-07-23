@@ -35,12 +35,17 @@ interface Product {
   description: string;
   price: number;
   stock: number;
-  images: string[];
+  images: string[];     
+  rawImages: string[];
 }
 
 const normalizeProduct = (p: unknown): Product => {
-  const prod = p as Product;
-  return { ...prod, images: prod.images.map(fileUrl) };
+  const prod = p as any;
+  return {
+    ...prod,
+    rawImages: prod.images ?? [],
+    images: (prod.images ?? []).map(fileUrl),
+  };
 };
 
 const normalizeCategory = (c: unknown): Category => {
@@ -407,7 +412,7 @@ function Footer({ navigate }: { navigate: (p: Page) => void }) {
           </div>
         </div>
         <div className="border-t border-white/8 pt-6 flex flex-col md:flex-row justify-between items-center gap-3">
-          <p className="font-opensans text-xs text-white/25">© 2025 Hóltun Centro Holístico. Todos los derechos reservados.</p>
+          <p className="font-opensans text-xs text-white/25">© 2026 Hóltun Centro Holístico. Todos los derechos reservados.</p>
           <p className="font-opensans text-xs text-white/15">Diseñado con propósito</p>
         </div>
       </div>
@@ -1021,8 +1026,15 @@ function EditProductModal({ product, onSave, onClose }: {
   });
   const [apiCategories, setApiCategories] = useState<Category[]>([]);
   const [selectedUuids, setSelectedUuids] = useState<string[]>(product.categories.map((c) => c.uuid));
-  const [imagePreviews, setImagePreviews] = useState<string[]>([...product.images]);
-  const [imageFiles, setImageFiles] = useState<File[]>([]);
+
+  // Imágenes que YA existían en el producto (rutas crudas, tal como las espera el backend).
+  // Se muestran usando fileUrl(path) solo para el <img>, pero se mandan crudas al guardar.
+  const [existingImages, setExistingImages] = useState<string[]>([...product.rawImages]);
+
+  // Imágenes nuevas: archivos reales + sus previews en base64, siempre en el mismo índice.
+  const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
+  const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
+
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -1036,17 +1048,23 @@ function EditProductModal({ product, onSave, onClose }: {
 
   const inputCls = "font-opensans w-full px-4 py-2.5 bg-background border border-border rounded-xl text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/25 transition-all resize-none";
 
+  const totalImages = existingImages.length + newImagePreviews.length;
+
   const addImage = (file: File) => {
-    if (imagePreviews.length >= 3) return;
-    setImageFiles((prev) => [...prev, file]);
+    if (totalImages >= 5) return;
+    setNewImageFiles((prev) => [...prev, file]);
     const r = new FileReader();
-    r.onload = (ev) => setImagePreviews((prev) => [...prev, ev.target?.result as string]);
+    r.onload = (ev) => setNewImagePreviews((prev) => [...prev, ev.target?.result as string]);
     r.readAsDataURL(file);
   };
 
-  const removeImage = (i: number) => {
-    setImagePreviews((prev) => prev.filter((_, j) => j !== i));
-    setImageFiles((prev) => prev.filter((_, j) => j !== i));
+  const removeExistingImage = (path: string) => {
+    setExistingImages((prev) => prev.filter((p) => p !== path));
+  };
+
+  const removeNewImage = (i: number) => {
+    setNewImageFiles((prev) => prev.filter((_, j) => j !== i));
+    setNewImagePreviews((prev) => prev.filter((_, j) => j !== i));
   };
 
   const handleSave = async () => {
@@ -1058,14 +1076,14 @@ function EditProductModal({ product, onSave, onClose }: {
         price: Number(form.price) || product.price,
         stock: Number(form.stock) ?? product.stock,
         categoryUuids: selectedUuids.length ? selectedUuids : product.categories.map((c) => c.uuid),
-        images: imageFiles,
+        images: newImageFiles,
+        existingImagePaths: existingImages,
       });
       const chosenCats = apiCategories.filter((c) => selectedUuids.includes(c.uuid));
+      const normalized = normalizeProduct(updated);
       onSave({
-        ...product,
-        ...updated,
-        categories: chosenCats.length ? chosenCats : product.categories,
-        images: imagePreviews,
+        ...normalized,
+        categories: chosenCats.length ? chosenCats : normalized.categories,
       });
     } catch {
       toast.error("Error al guardar", { description: "No se pudo actualizar el producto. Intenta de nuevo." });
@@ -1110,6 +1128,7 @@ function EditProductModal({ product, onSave, onClose }: {
                   const checked = selectedUuids.includes(c.uuid);
                   return (
                     <label key={c.uuid}
+                      onClick={() => toggleCat(c.uuid)}
                       className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-colors border-b border-border last:border-0 ${checked ? "bg-primary/8" : "hover:bg-secondary"}`}>
                       <div className={`w-4 h-4 rounded flex items-center justify-center border transition-all shrink-0 ${checked ? "bg-primary border-primary" : "border-border"}`}>
                         {checked && <Check size={10} className="text-white" />}
@@ -1148,20 +1167,33 @@ function EditProductModal({ product, onSave, onClose }: {
           {/* Images */}
           <div>
             <label className="font-opensans text-[10px] tracking-[0.18em] uppercase text-foreground/55 block mb-2">
-              Imágenes <span className="normal-case opacity-60">(máx. 3)</span>
+              Imágenes <span className="normal-case opacity-60">(máx. 5)</span>
             </label>
             <div className="flex gap-3 flex-wrap">
-              {imagePreviews.map((src, i) => (
-                <div key={i} className="relative w-20 h-20 rounded-xl overflow-hidden border border-border group">
-                  <img src={src} alt={`img-${i}`} className="w-full h-full object-cover" />
+              {/* Imágenes existentes */}
+              {existingImages.map((path) => (
+                <div key={path} className="relative w-20 h-20 rounded-xl overflow-hidden border border-border group">
+                  <img src={fileUrl(path)} alt="imagen existente" className="w-full h-full object-cover" />
                   <button
-                    onClick={() => removeImage(i)}
+                    onClick={() => removeExistingImage(path)}
                     className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <X size={14} />
                   </button>
                 </div>
               ))}
-              {imagePreviews.length < 3 && (
+              {/* Imágenes nuevas */}
+              {newImagePreviews.map((src, i) => (
+                <div key={`new-${i}`} className="relative w-20 h-20 rounded-xl overflow-hidden border border-primary/40 group">
+                  <img src={src} alt={`nueva-${i}`} className="w-full h-full object-cover" />
+                  <span className="absolute top-1 left-1 bg-primary text-white text-[8px] px-1.5 py-0.5 rounded-full">Nueva</span>
+                  <button
+                    onClick={() => removeNewImage(i)}
+                    className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <X size={14} />
+                  </button>
+                </div>
+              ))}
+              {totalImages < 5 && (
                 <label className="w-20 h-20 border-2 border-dashed border-border rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-primary/40 transition-all group">
                   <Upload size={14} className="text-muted-foreground/40 group-hover:text-primary transition-colors mb-1" />
                   <p className="font-opensans text-[9px] text-muted-foreground/50">Agregar</p>
@@ -1368,23 +1400,43 @@ function InventorySection() {
 
 // ─── Categories Section ───────────────────────────────────────────────────────
 
-interface CatItem { uuid: string; name: string; description: string; image?: string; count: number; }
+interface CatItem {
+  uuid: string;
+  name: string;
+  description: string;
+  image?: string;      // transformada con fileUrl, para mostrar
+  rawImage?: string;    // cruda del backend, para mandar de vuelta al actualizar
+  count: number;
+}
 
 function CategoriesSection() {
   const [cats, setCats] = useState<CatItem[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const loadCategories = () => {
+  categoryService.getAll()
+    .then((data) => setCats(data.map((c) => ({
+      uuid: c.uuid,
+      name: c.name,
+      description: c.description ?? "",
+      image: c.image ? fileUrl(c.image) : undefined,
+      rawImage: c.image,
+      count: c.productCount ?? 0,
+    }))))
+    .catch(() => setCats([]))
+    .finally(() => setLoading(false));
+};
+
   useEffect(() => {
-    categoryService.getAll()
-      .then((data) => setCats(data.map((c) => ({ uuid: c.uuid, name: c.name, description: c.description ?? "", image: c.image ? fileUrl(c.image) : undefined, count: 0 }))))
-      .catch(() => setCats([]))
-      .finally(() => setLoading(false));
+    loadCategories();
   }, []);
+
   const [editingUuid, setEditingUuid] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
   const [editDesc, setEditDesc] = useState("");
   const [editImagePreview, setEditImagePreview] = useState<string | undefined>(undefined);
   const [editImageFile, setEditImageFile] = useState<File | undefined>(undefined);
+  const [editExistingImage, setEditExistingImage] = useState<string | undefined>(undefined);
   const [editSaving, setEditSaving] = useState(false);
   const [deletingUuid, setDeletingUuid] = useState<string | null>(null);
   const [newName, setNewName] = useState("");
@@ -1392,6 +1444,7 @@ function CategoriesSection() {
   const [newImagePreview, setNewImagePreview] = useState<string | null>(null);
   const [newImageFile, setNewImageFile] = useState<File | undefined>(undefined);
   const [addError, setAddError] = useState("");
+  const [imageError, setImageError] = useState("");
   const [addSaving, setAddSaving] = useState(false);
   const [addSuccess, setAddSuccess] = useState(false);
 
@@ -1401,16 +1454,36 @@ function CategoriesSection() {
     setEditDesc(cat.description);
     setEditImagePreview(cat.image);
     setEditImageFile(undefined);
+    setEditExistingImage(cat.rawImage);
     setDeletingUuid(null);
   };
 
   const saveEdit = async (uuid: string, oldName: string) => {
     const trimmed = editValue.trim();
     if (!trimmed) { setEditingUuid(null); return; }
+    if (!editImageFile && !editExistingImage) {
+      toast.error("Falta la imagen", { description: "La categoría debe conservar o tener una imagen." });
+      return;
+    }
     setEditSaving(true);
     try {
-      await categoryService.update(uuid, { name: trimmed, description: editDesc.trim(), image: editImageFile });
-      setCats((prev) => prev.map((c) => c.uuid === uuid ? { ...c, name: trimmed, description: editDesc.trim(), image: editImagePreview } : c));
+      const updated = await categoryService.update(uuid, {
+        name: trimmed,
+        description: editDesc.trim(),
+        image: editImageFile,
+        existingImage: editExistingImage,
+      });
+      setCats((prev) => prev.map((c) => c.uuid === uuid
+        ? {
+            ...c,
+            name: updated.name,
+            description: updated.description ?? "",
+            image: updated.image ? fileUrl(updated.image) : undefined,
+            rawImage: updated.image,
+            count: updated.productCount ?? c.count,
+          }
+        : c
+      ));
       toast.success("Categoría actualizada", { description: `"${oldName}" fue actualizada.` });
     } catch {
       toast.error("Error al actualizar", { description: "No se pudo guardar el cambio. Intenta de nuevo." });
@@ -1428,27 +1501,41 @@ function CategoriesSection() {
       toast.success("Categoría eliminada", { description: `"${name}" fue eliminada del sistema.` });
     } catch {
       toast.error("Error al eliminar", { description: "No se pudo eliminar la categoría." });
-      categoryService.getAll().then((data) => setCats(data.map((c) => ({ uuid: c.uuid, name: c.name, description: c.description ?? "", image: c.image ? fileUrl(c.image) : undefined, count: 0 })))).catch(() => {});
+      loadCategories();
     }
   };
 
   const handleAdd = async () => {
     const trimmed = newName.trim();
+    setImageError("");
     if (!trimmed) { setAddError("Ingresa un nombre para la categoría"); return; }
     if (cats.some((c) => c.name.toLowerCase() === trimmed.toLowerCase())) {
       setAddError("Ya existe una categoría con ese nombre");
       toast.error("Categoría duplicada", { description: `"${trimmed}" ya existe en el sistema.` });
       return;
     }
+    if (!newImageFile) {
+      setImageError("La imagen de categoría es obligatoria");
+      toast.error("Falta la imagen", { description: "Debes subir una imagen para crear la categoría." });
+      return;
+    }
     setAddSaving(true);
     try {
       const created = await categoryService.create({ name: trimmed, description: newDesc.trim() || undefined, image: newImageFile });
-      setCats((prev) => [...prev, { uuid: created.uuid, name: created.name, description: created.description ?? "", image: created.image, count: 0 }]);
+      setCats((prev) => [...prev, {
+        uuid: created.uuid,
+        name: created.name,
+        description: created.description ?? "",
+        image: created.image ? fileUrl(created.image) : undefined,
+        rawImage: created.image,
+        count: created.productCount ?? 0,
+      }]);
       setNewName("");
       setNewDesc("");
       setNewImagePreview(null);
       setNewImageFile(undefined);
       setAddError("");
+      setImageError("");
       setAddSuccess(true);
       toast.success("Categoría creada", { description: `"${trimmed}" fue agregada exitosamente.` });
       setTimeout(() => setAddSuccess(false), 3000);
@@ -1543,19 +1630,21 @@ function CategoriesSection() {
           />
           {/* Image */}
           <div>
-            <label className="font-opensans text-[10px] tracking-[0.18em] uppercase text-foreground/55 block mb-2">Imagen de categoría <span className="normal-case opacity-60">(opcional)</span></label>
+            <label className="font-opensans text-[10px] tracking-[0.18em] uppercase text-foreground/55 block mb-2">
+              Imagen de categoría <span className="text-red-400">*</span>
+            </label>
             <label className="relative inline-block cursor-pointer group">
               {newImagePreview ? (
                 <div className="relative w-20 h-20 rounded-xl overflow-hidden border border-border">
                   <img src={newImagePreview} alt="preview" className="w-full h-full object-cover" />
                   <button
-                    onClick={(e) => { e.preventDefault(); setNewImagePreview(null); }}
+                    onClick={(e) => { e.preventDefault(); setNewImagePreview(null); setNewImageFile(undefined); }}
                     className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <X size={14} />
                   </button>
                 </div>
               ) : (
-                <div className="w-20 h-20 border-2 border-dashed border-border rounded-xl flex flex-col items-center justify-center hover:border-primary/40 transition-all">
+                <div className={`w-20 h-20 border-2 border-dashed rounded-xl flex flex-col items-center justify-center hover:border-primary/40 transition-all ${imageError ? "border-red-400" : "border-border"}`}>
                   <Upload size={14} className="text-muted-foreground/40 group-hover:text-primary transition-colors mb-1" />
                   <p className="font-opensans text-[9px] text-muted-foreground/50">Subir</p>
                 </div>
@@ -1563,10 +1652,21 @@ function CategoriesSection() {
               <input type="file" accept="image/*" className="hidden"
                 onChange={(e) => {
                   const f = e.target.files?.[0];
-                  if (f) { setNewImageFile(f); const r = new FileReader(); r.onload = (ev) => setNewImagePreview(ev.target?.result as string); r.readAsDataURL(f); }
+                  if (f) {
+                    setNewImageFile(f);
+                    setImageError(""); // ← limpia el error al subir
+                    const r = new FileReader();
+                    r.onload = (ev) => setNewImagePreview(ev.target?.result as string);
+                    r.readAsDataURL(f);
+                  }
                   e.target.value = "";
                 }} />
             </label>
+            {imageError && (
+              <p className="font-opensans text-xs text-red-500 mt-1.5 flex items-center gap-1">
+                <AlertCircle size={11} /> {imageError}
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -1627,7 +1727,12 @@ function CategoriesSection() {
                                 <div className="relative w-14 h-14 rounded-lg overflow-hidden border border-border">
                                   <img src={editImagePreview} alt="edit" className="w-full h-full object-cover" />
                                   <button
-                                    onClick={(e) => { e.preventDefault(); setEditImagePreview(undefined); }}
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      setEditImagePreview(undefined);
+                                      setEditImageFile(undefined);
+                                      setEditExistingImage(undefined);
+                                    }}
                                     className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                     <X size={12} />
                                   </button>
@@ -1641,7 +1746,12 @@ function CategoriesSection() {
                               <input type="file" accept="image/*" className="hidden"
                                 onChange={(e) => {
                                   const f = e.target.files?.[0];
-                                  if (f) { setEditImageFile(f); const r = new FileReader(); r.onload = (ev) => setEditImagePreview(ev.target?.result as string); r.readAsDataURL(f); }
+                                  if (f) {
+                                    setEditImageFile(f);
+                                    const r = new FileReader();
+                                    r.onload = (ev) => setEditImagePreview(ev.target?.result as string);
+                                    r.readAsDataURL(f);
+                                  }
                                   e.target.value = "";
                                 }} />
                             </label>
@@ -1814,7 +1924,7 @@ function AddProductSection() {
     }`;
 
   const addImage = (file: File) => {
-    if (imagePreviews.length >= 3) return;
+    if (imagePreviews.length >= 5) return;
     setImageFiles((prev) => [...prev, file]);
     const r = new FileReader();
     r.onload = (ev) => setImagePreviews((prev) => [...prev, ev.target?.result as string]);
@@ -1896,10 +2006,10 @@ function AddProductSection() {
           </FormField>
         </div>
 
-        {/* Images (up to 3) */}
+        {/* Images (up to 5) */}
         <div>
           <label className="font-opensans text-[10px] tracking-[0.18em] uppercase text-foreground/55 block mb-2">
-            Imágenes del producto <span className="normal-case opacity-60">(máx. 3)</span>
+            Imágenes del producto <span className="normal-case opacity-60">(máx. 5)</span>
           </label>
           <div className="flex gap-3 flex-wrap">
             {imagePreviews.map((src, i) => (
@@ -1912,7 +2022,7 @@ function AddProductSection() {
                 </button>
               </div>
             ))}
-            {imagePreviews.length < 3 && (
+            {imagePreviews.length < 5 && (
               <label className="w-24 h-24 border-2 border-dashed border-border rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-primary/40 transition-all group">
                 <Upload size={16} className="text-muted-foreground/35 group-hover:text-primary transition-colors mb-1" />
                 <p className="font-opensans text-[9px] text-muted-foreground/50">Subir</p>
@@ -2047,12 +2157,33 @@ export default function App() {
   const [page, setPage] = useState<Page>("home");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isDark, setIsDark] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
 
   useEffect(() => { document.title = "Hóltún Centro Holístico"; }, []);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", isDark);
   }, [isDark]);
+
+  useEffect(() => {
+    const token = localStorage.getItem("holtun_token");
+
+    if (!token) {
+      setCheckingSession(false);
+      return;
+    }
+
+    authService.validateToken(token)
+      .then(() => {
+        // El token sigue siendo válido — restauramos al panel de administrador
+        setPage("admin");
+      })
+      .catch(() => {
+        // Token inválido o expirado — lo limpiamos
+        localStorage.removeItem("holtun_token");
+      })
+      .finally(() => setCheckingSession(false));
+  }, []);
 
   const navigate = (p: Page, anchor?: string) => {
     setPage(p);
@@ -2066,6 +2197,14 @@ export default function App() {
   };
 
   const showChrome = page !== "admin";
+
+  if (checkingSession) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
