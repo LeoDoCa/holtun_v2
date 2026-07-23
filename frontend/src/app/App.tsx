@@ -25,7 +25,7 @@ function validateUsername(value: string): ValidationResult {
   const trimmed = value.trim();
   if (!trimmed) return { valid: false, error: "Ingresa un usuario" };
   if (!/^[a-zA-Z0-9_.-]{3,32}$/.test(trimmed)) {
-    return { valid: false, error: "Usuario inválido (3-32 caracteres: letras, números, punto, guion o guion bajo)" };
+    return { valid: false, error: "El usuario debe tener entre 3 y 32 caracteres, y solo puede contener letras, números, puntos, guiones o guiones bajos" };
   }
   if (SUSPICIOUS_PATTERN.test(trimmed)) {
     return { valid: false, error: "Usuario contiene caracteres no permitidos" };
@@ -712,8 +712,8 @@ function HomePage({ navigate }: { navigate: (p: Page) => void }) {
             {/* Stats */}
             <motion.div variants={fadeUp} className="grid grid-cols-3 gap-4 mt-12">
               {[
-                { n: "5+", label: "Años de experiencia" },
-                { n: "20+", label: "Productos naturales" },
+                { n: "+5", label: "Años de experiencia" },
+                { n: "+20", label: "Productos naturales" },
                 { n: "100%", label: "Ingredientes naturales" },
               ].map((s) => (
                 <div key={s.label} className="text-center py-7 border border-border rounded-2xl">
@@ -731,31 +731,88 @@ function HomePage({ navigate }: { navigate: (p: Page) => void }) {
 
 // ─── CatalogPage ──────────────────────────────────────────────────────────────
 
+function useDebouncedValue<T>(value: T, delay = 400): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(t);
+  }, [value, delay]);
+  return debounced;
+}
+
 function CatalogPage({ navigate, setProduct }: { navigate: (p: Page) => void; setProduct: (p: Product) => void }) {
   const [search, setSearch] = useState("");
-  const [active, setActive] = useState("Todos");
+  const debouncedSearch = useDebouncedValue(search, 400);
+
+  const [activeCategoryUuid, setActiveCategoryUuid] = useState<string | null>(null);
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [onlyInStock, setOnlyInStock] = useState(false);
+
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [catalogHasProducts, setCatalogHasProducts] = useState<boolean | null>(null);
+
   useEffect(() => {
-    Promise.all([
-      productService.getAll().catch(() => []),
-      categoryService.getAll().catch(() => []),
-    ]).then(([prods, cats]) => {
-      setProducts((prods as unknown as Product[]).map(normalizeProduct));
-      setCategories([{ uuid: "cat-0", name: "Todos" }, ...(cats as unknown as Category[]).map(normalizeCategory)]);
-    }).finally(() => setLoading(false));
+    categoryService.getAll()
+      .then((cats) => setCategories(cats.map(normalizeCategory)))
+      .catch(() => setCategories([]));
   }, []);
 
-  const filtered = useMemo(
-    () => products.filter((p) => {
-      const matchCat = active === "Todos" || p.categories.some((c) => c.name === active);
-      const q = search.toLowerCase();
-      return matchCat && (!q || p.name.toLowerCase().includes(q) || p.categories.some((c) => c.name.toLowerCase().includes(q)));
-    }),
-    [products, search, active]
-  );
+  useEffect(() => {
+    productService.getFiltered({ page: 0, size: 1 })
+      .then((res) => setCatalogHasProducts(res.totalElements > 0))
+      .catch(() => setCatalogHasProducts(true));
+  }, []);
+
+  useEffect(() => {
+    setPage(0);
+  }, [debouncedSearch, activeCategoryUuid, minPrice, maxPrice, onlyInStock]);
+
+  useEffect(() => {
+    setLoading(true);
+    productService.getFiltered({
+      name: debouncedSearch.trim() || undefined,
+      categoryUuid: activeCategoryUuid ?? undefined,
+      minPrice: minPrice ? Number(minPrice) : undefined,
+      maxPrice: maxPrice ? Number(maxPrice) : undefined,
+      inStock: onlyInStock ? true : undefined,
+      page,
+      size: 12,
+    })
+      .then((res) => {
+        setProducts(res.content.map(normalizeProduct));
+        setTotalPages(res.totalPages);
+        setTotalElements(res.totalElements);
+      })
+      .catch(() => {
+        setProducts([]);
+        setTotalPages(0);
+        setTotalElements(0);
+      })
+      .finally(() => setLoading(false));
+  }, [debouncedSearch, activeCategoryUuid, minPrice, maxPrice, onlyInStock, page]);
+
+  const hasActiveFilters =
+    search.trim() !== "" ||
+    activeCategoryUuid !== null ||
+    minPrice !== "" ||
+    maxPrice !== "" ||
+    onlyInStock;
+
+  const clearFilters = () => {
+    setSearch("");
+    setActiveCategoryUuid(null);
+    setMinPrice("");
+    setMaxPrice("");
+    setOnlyInStock(false);
+  };
 
   return (
     <div className="min-h-screen pt-28 pb-24">
@@ -769,9 +826,10 @@ function CatalogPage({ navigate, setProduct }: { navigate: (p: Page) => void; se
         </motion.div>
 
         {/* Search */}
-        <div className="relative mb-8 max-w-lg">
+        <div className="relative mb-4 max-w-lg">
           <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-          <input type="text" placeholder="Buscar productos…" value={search} onChange={(e) => setSearch(e.target.value)}
+          <input type="text" placeholder="Buscar productos…" value={search} maxLength={100}
+            onChange={(e) => setSearch(e.target.value)}
             className="font-opensans w-full pl-10 pr-9 py-3.5 bg-card border border-border rounded-full text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/25 transition-all" />
           {search && (
             <button onClick={() => setSearch("")} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
@@ -780,23 +838,52 @@ function CatalogPage({ navigate, setProduct }: { navigate: (p: Page) => void; se
           )}
         </div>
 
+        {/* Filtros de precio + stock */}
+        <div className="flex flex-wrap items-center gap-3 mb-8">
+          <input type="number" min="0" placeholder="Precio mín." value={minPrice}
+            onChange={(e) => setMinPrice(e.target.value)}
+            className="font-opensans w-32 px-3 py-2 bg-card border border-border rounded-full text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/25" />
+          <input type="number" min="0" placeholder="Precio máx." value={maxPrice}
+            onChange={(e) => setMaxPrice(e.target.value)}
+            className="font-opensans w-32 px-3 py-2 bg-card border border-border rounded-full text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/25" />
+          <label
+            onClick={() => setOnlyInStock(!onlyInStock)}
+            className="flex items-center gap-2 font-opensans text-xs text-muted-foreground cursor-pointer select-none"
+          >
+            <div className={`w-4 h-4 rounded flex items-center justify-center border transition-all shrink-0 ${
+              onlyInStock ? "bg-primary border-primary" : "border-border"
+            }`}>
+              {onlyInStock && <Check size={10} className="text-white" />}
+            </div>
+            Solo disponibles
+          </label>
+          {hasActiveFilters && (
+            <button onClick={clearFilters}
+              className="font-opensans text-[10px] tracking-wide text-muted-foreground hover:text-primary transition-colors flex items-center gap-1 ml-1">
+              <X size={11} /> Limpiar filtros
+            </button>
+          )}
+        </div>
+
         <div className="flex gap-8">
-          {/* Sidebar categorías — desktop (solo si hay categorías) */}
-          {categories.length > 1 && (
+          {/* Sidebar categorías */}
+          {categories.length > 0 && (
             <aside className="hidden md:block w-56 shrink-0">
               <div className="bg-card border border-border rounded-2xl p-3 sticky top-28">
                 <p className="font-opensans text-[9px] tracking-[0.3em] uppercase text-muted-foreground px-2 py-2 mb-1">Categorías</p>
                 <div className="space-y-0.5">
-                  {categories.map((cat) => {
-                    const Icon = CATEGORY_ICONS[cat.name] ?? Package;
+                  <button onClick={() => setActiveCategoryUuid(null)}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-all duration-200 ${activeCategoryUuid === null ? "bg-primary text-white shadow-sm shadow-primary/20" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
+                    <Boxes size={13} className="shrink-0" />
+                    <span className="font-opensans text-xs leading-tight">Todos</span>
+                  </button>
+                  {categories.map((c) => {
+                    const Icon = CATEGORY_ICONS[c.name] ?? Package;
                     return (
-                      <button key={cat.uuid} onClick={() => setActive(cat.name)}
-                        className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-all duration-200 ${active === cat.name
-                          ? "bg-primary text-white shadow-sm shadow-primary/20"
-                          : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-                          }`}>
+                      <button key={c.uuid} onClick={() => setActiveCategoryUuid(c.uuid)}
+                        className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-all duration-200 ${activeCategoryUuid === c.uuid ? "bg-primary text-white shadow-sm shadow-primary/20" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
                         <Icon size={13} className="shrink-0" />
-                        <span className="font-opensans text-xs leading-tight">{cat.name}</span>
+                        <span className="font-opensans text-xs leading-tight">{c.name}</span>
                       </button>
                     );
                   })}
@@ -807,18 +894,19 @@ function CatalogPage({ navigate, setProduct }: { navigate: (p: Page) => void; se
 
           {/* Main */}
           <div className="flex-1 min-w-0">
-            {/* Mobile chips (solo si hay categorías) */}
-            {categories.length > 1 && (
+            {/* Chips móvil */}
+            {categories.length > 0 && (
               <div className="flex md:hidden flex-wrap gap-2 mb-5">
-                {categories.map((cat) => {
-                  const Icon = CATEGORY_ICONS[cat.name] ?? Package;
+                <button onClick={() => setActiveCategoryUuid(null)}
+                  className={`font-opensans text-[10px] tracking-wide px-3.5 py-2 rounded-full border transition-all flex items-center gap-1.5 ${activeCategoryUuid === null ? "bg-primary border-primary text-white shadow-sm shadow-primary/20" : "bg-card border-border text-muted-foreground hover:border-primary/40 hover:text-primary"}`}>
+                  <Boxes size={10} /> Todos
+                </button>
+                {categories.map((c) => {
+                  const Icon = CATEGORY_ICONS[c.name] ?? Package;
                   return (
-                    <button key={cat.uuid} onClick={() => setActive(cat.name)}
-                      className={`font-opensans text-[10px] tracking-wide px-3.5 py-2 rounded-full border transition-all flex items-center gap-1.5 ${active === cat.name
-                        ? "bg-primary border-primary text-white shadow-sm shadow-primary/20"
-                        : "bg-card border-border text-muted-foreground hover:border-primary/40 hover:text-primary"
-                        }`}>
-                      <Icon size={10} /> {cat.name}
+                    <button key={c.uuid} onClick={() => setActiveCategoryUuid(c.uuid)}
+                      className={`font-opensans text-[10px] tracking-wide px-3.5 py-2 rounded-full border transition-all flex items-center gap-1.5 ${activeCategoryUuid === c.uuid ? "bg-primary border-primary text-white shadow-sm shadow-primary/20" : "bg-card border-border text-muted-foreground hover:border-primary/40 hover:text-primary"}`}>
+                      <Icon size={10} /> {c.name}
                     </button>
                   );
                 })}
@@ -827,7 +915,7 @@ function CatalogPage({ navigate, setProduct }: { navigate: (p: Page) => void; se
 
             {!loading && (
               <p className="font-opensans text-xs text-muted-foreground mb-6">
-                {filtered.length} {filtered.length === 1 ? "producto encontrado" : "productos encontrados"}
+                {totalElements} {totalElements === 1 ? "producto encontrado" : "productos encontrados"}
               </p>
             )}
 
@@ -838,7 +926,7 @@ function CatalogPage({ navigate, setProduct }: { navigate: (p: Page) => void; se
                   <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
                   <p className="font-opensans text-sm text-muted-foreground">Cargando productos…</p>
                 </motion.div>
-              ) : products.length === 0 ? (
+              ) : products.length === 0 && catalogHasProducts === false ? (
                 <motion.div key="no-products" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                   className="text-center py-28">
                   <div className="w-16 h-16 rounded-full bg-primary/8 flex items-center justify-center mx-auto mb-5">
@@ -857,16 +945,20 @@ function CatalogPage({ navigate, setProduct }: { navigate: (p: Page) => void; se
                     Consultar por WhatsApp
                   </a>
                 </motion.div>
-              ) : filtered.length === 0 ? (
+              ) : products.length === 0 ? (
                 <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center py-24">
                   <Package size={36} className="text-muted-foreground/25 mx-auto mb-4" />
                   <h3 style={{ fontFamily: "'Roboto', sans-serif" }} className="text-xl font-light text-muted-foreground mb-2">Sin resultados</h3>
-                  <p className="font-opensans text-sm text-muted-foreground/60">Intenta con otro término de búsqueda</p>
+                  <p className="font-opensans text-sm text-muted-foreground/60 mb-6">Intenta con otros filtros de búsqueda</p>
+                  <button onClick={clearFilters}
+                    className="font-opensans text-[10px] tracking-[0.15em] uppercase text-primary border border-primary/30 px-5 py-2.5 rounded-full hover:bg-primary/10 transition-colors inline-flex items-center gap-2">
+                    <X size={11} /> Limpiar filtros
+                  </button>
                 </motion.div>
               ) : (
                 <motion.div key="grid" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                   className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filtered.map((product, i) => (
+                  {products.map((product, i) => (
                     <motion.div key={product.uuid} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.4, delay: Math.min(i * 0.05, 0.35) }}>
                       <ProductCard product={product} onClick={() => { setProduct(product); navigate("product"); }} />
@@ -875,6 +967,23 @@ function CatalogPage({ navigate, setProduct }: { navigate: (p: Page) => void; se
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {/* Paginación */}
+            {!loading && totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 mt-10">
+                <button disabled={page === 0} onClick={() => setPage((p) => p - 1)}
+                  className="w-9 h-9 rounded-full border border-border flex items-center justify-center text-muted-foreground disabled:opacity-30 hover:border-primary/40 hover:text-primary transition-all">
+                  <ChevronLeft size={14} />
+                </button>
+                <span className="font-opensans text-xs text-muted-foreground px-2">
+                  Página {page + 1} de {totalPages}
+                </span>
+                <button disabled={page >= totalPages - 1} onClick={() => setPage((p) => p + 1)}
+                  className="w-9 h-9 rounded-full border border-border flex items-center justify-center text-muted-foreground disabled:opacity-30 hover:border-primary/40 hover:text-primary transition-all">
+                  <ChevronRight size={14} />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -1937,8 +2046,19 @@ function AddProductSection() {
       .finally(() => setCatsLoading(false));
   }, []);
 
-  const toggleCatAdd = (uuid: string) =>
-    setSelectedUuids((prev) => prev.includes(uuid) ? prev.filter((id) => id !== uuid) : [...prev, uuid]);
+  const toggleCatAdd = (uuid: string) => {
+    const updated = selectedUuids.includes(uuid)
+      ? selectedUuids.filter((id) => id !== uuid)
+      : [...selectedUuids, uuid];
+
+    setSelectedUuids(updated);
+    setCatsTouched(true);
+
+    setErrors((prev) => ({
+      ...prev,
+      categories: updated.length === 0 ? "Selecciona al menos una categoría" : undefined,
+    }));
+  };
 
   const validate = (f: AddFormData): FormErrors => {
     const e: FormErrors = {};
@@ -2036,7 +2156,7 @@ function AddProductSection() {
                 return (
                   <label key={c.uuid}
                     className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-colors border-b border-border last:border-0 ${checked ? "bg-primary/8" : "hover:bg-secondary"}`}
-                    onClick={() => { toggleCatAdd(c.uuid); setCatsTouched(true); }}>
+                    onClick={() => toggleCatAdd(c.uuid)}>
                     <div className={`w-4 h-4 rounded flex items-center justify-center border transition-all shrink-0 ${checked ? "bg-primary border-primary" : "border-border"}`}>
                       {checked && <Check size={10} className="text-white" />}
                     </div>
@@ -2104,7 +2224,7 @@ function AddProductSection() {
               </label>
             )}
           </div>
-          <p className="font-opensans text-[10px] text-muted-foreground mt-2">PNG, JPG, WebP · máx. 5 MB por imagen</p>
+          <p className="font-opensans text-[10px] text-muted-foreground mt-2">PNG, JPG, WebP · máx. 10 MB por imagen</p>
         </div>
 
         <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} onClick={handleSubmit} disabled={submitting}
@@ -2133,7 +2253,11 @@ function FormField({ label, required, error, ok, children }: {
 
 // ─── AdminPanel ───────────────────────────────────────────────────────────────
 
-function AdminPanel({ navigate }: { navigate: (p: Page) => void }) {
+function AdminPanel({ navigate, isDark, toggleDark }: {
+  navigate: (p: Page) => void;
+  isDark: boolean;
+  toggleDark: () => void;
+}) {
   const [section, setSection] = useState<AdminSection>("inventory");
 
   const handleLogout = () => {
@@ -2162,9 +2286,16 @@ function AdminPanel({ navigate }: { navigate: (p: Page) => void }) {
     <div className="min-h-screen flex">
       {/* Sidebar */}
       <aside className="hidden md:flex w-60 shrink-0 bg-[#475644] dark:bg-[#2d3829] flex-col">
-        <div className="p-6 border-b border-white/8">
-          <p className="font-opensans text-[9px] tracking-[0.3em] uppercase text-white/30 mb-1">Panel</p>
-          <p style={{ fontFamily: "'Roboto', sans-serif" }} className="text-lg font-light text-white">Administrador</p>
+        <div className="p-6 border-b border-white/8 flex items-center justify-between">
+          <div>
+            <p className="font-opensans text-[9px] tracking-[0.3em] uppercase text-white/30 mb-1">Panel</p>
+            <p style={{ fontFamily: "'Roboto', sans-serif" }} className="text-lg font-light text-white">Administrador</p>
+          </div>
+          <button onClick={toggleDark}
+            className="w-9 h-9 rounded-full flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all duration-300 shrink-0"
+            title={isDark ? "Modo claro" : "Modo oscuro"}>
+            {isDark ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
         </div>
         <nav className="p-3 flex-1 space-y-1">
           {sidebarLinks.map((l) => (
@@ -2197,6 +2328,11 @@ function AdminPanel({ navigate }: { navigate: (p: Page) => void }) {
               <l.Icon size={10} /> {l.label}
             </button>
           ))}
+          <button onClick={toggleDark}
+            className="text-white/40 hover:text-white transition-colors shrink-0"
+            title={isDark ? "Modo claro" : "Modo oscuro"}>
+            {isDark ? <Sun size={14} /> : <Moon size={14} />}
+          </button>
           <button onClick={handleLogout} className="ml-auto text-white/30 font-opensans text-[10px] whitespace-nowrap">Salir</button>
         </div>
 
@@ -2246,7 +2382,6 @@ export default function App() {
 
     authService.validateToken(token)
       .then(() => {
-        // El token sigue siendo válido — restauramos al panel de administrador
         setPage("admin");
       })
       .catch(() => {
@@ -2294,7 +2429,7 @@ export default function App() {
           {page === "catalog" && <CatalogPage navigate={navigate} setProduct={setSelectedProduct} />}
           {page === "product" && selectedProduct && <ProductPage product={selectedProduct} navigate={navigate} />}
           {page === "admin-gate" && <AdminGatePage navigate={navigate} />}
-          {page === "admin" && <AdminPanel navigate={navigate} />}
+          {page === "admin" && <AdminPanel navigate={navigate} isDark={isDark} toggleDark={() => setIsDark(!isDark)} />}
         </motion.div>
       </AnimatePresence>
 

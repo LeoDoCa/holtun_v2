@@ -52,6 +52,25 @@ export interface ProductDto {
   images: string[];
 }
 
+export interface ProductFilterParams {
+  name?: string;
+  categoryUuid?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  inStock?: boolean;
+  minStock?: number;
+  page?: number;
+  size?: number;
+}
+
+export interface PagedResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
+}
+
 export interface AuthRequest {
   username: string;
   password: string;
@@ -109,6 +128,23 @@ export const userService = {
 export const productService = {
   async getAll(): Promise<ProductDto[]> {
     const { data } = await client.get<ProductDto[]>("/products");
+    return data;
+  },
+
+  async getFiltered(params: ProductFilterParams): Promise<PagedResponse<ProductDto>> {
+    const { data } = await client.get<PagedResponse<ProductDto>>("/products/filter", {
+      params: {
+        name: params.name,
+        categoryUuid: params.categoryUuid,
+        minPrice: params.minPrice,
+        maxPrice: params.maxPrice,
+        inStock: params.inStock,
+        minStock: params.minStock,
+        page: params.page ?? 0,
+        size: params.size ?? 12,
+        sort: "name",
+      },
+    });
     return data;
   },
 
