@@ -112,7 +112,7 @@ const I = {
   hero: "https://images.unsplash.com/photo-1708667027894-6e9481ae1baf?w=1600&h=900&fit=crop&auto=format",
   about: "https://images.unsplash.com/photo-1647892702739-fd6cda128787?w=1200&h=700&fit=crop&auto=format",
   oilPlant: "https://images.unsplash.com/photo-1699373381616-6133334e754e?w=700&h=800&fit=crop&auto=format",
-  oilBlanket: "https://images.unsplash.com/photo-1662467191034-9cc663f1de92?w=700&h=800&fit=crop&auto=format",
+  oilBlanket: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
   facial: "https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
   corporal: "https://images.unsplash.com/photo-1761718210089-ba3bb5ccb54f?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
   skincare: "https://images.unsplash.com/photo-1613803745799-ba6c10aace85?w=700&h=800&fit=crop&auto=format",
@@ -613,7 +613,7 @@ function HomePage({ navigate }: { navigate: (p: Page, anchor?: string) => void }
       </section>
 
       {/* ── Categories showcase ── */}
-      <section className="py-20 bg-secondary">
+      <section className="pt-20 pb-8 bg-secondary">
         <div className="max-w-7xl mx-auto px-6">
           <motion.div initial="hidden" whileInView="show" viewport={{ once: true }}
             variants={{ show: { transition: { staggerChildren: 0.09 } } }}>
@@ -634,9 +634,15 @@ function HomePage({ navigate }: { navigate: (p: Page, anchor?: string) => void }
                 {displayCategories.map((cat) => {
                   const Icon = CATEGORY_ICONS[cat.name] ?? Package;
                   return (
-                    <motion.div key={cat.uuid} variants={fadeUp} whileHover={{ y: -5, transition: { duration: 0.22 } }}
+                    <motion.div
+                      key={cat.uuid}
+                      initial="hidden"
+                      animate="show"
+                      variants={fadeUp}
+                      whileHover={{ y: -5, transition: { duration: 0.22 } }}
                       onClick={() => goToCategory(cat)}
-                      className="group cursor-pointer bg-card rounded-2xl overflow-hidden shadow-sm hover:shadow-lg hover:shadow-primary/10 transition-shadow duration-400">
+                      className="group cursor-pointer bg-card rounded-2xl overflow-hidden shadow-sm hover:shadow-lg hover:shadow-primary/10 transition-shadow duration-400"
+                    >
                       <div className="h-36 overflow-hidden bg-muted flex items-center justify-center">
                         {cat.image
                           ? <img src={cat.image} alt={cat.name} loading="lazy" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
@@ -656,7 +662,7 @@ function HomePage({ navigate }: { navigate: (p: Page, anchor?: string) => void }
             )}
 
             {!catsLoading && (
-              <motion.div variants={fadeUp} className="text-center mt-12">
+              <motion.div variants={fadeUp} className="text-center mt-6">
                 <button onClick={() => navigate("catalog")}
                   className="font-opensans text-[11px] tracking-[0.2em] uppercase bg-primary text-white px-10 py-4 rounded-full hover:bg-accent transition-colors duration-300">
                   Ver catálogo completo
@@ -1304,7 +1310,7 @@ function TherapiesPage({ navigate }: { navigate: (p: Page) => void }) {
                   target="_blank" rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 bg-[#25D366]/10 text-[#25D366] px-4 py-2 rounded-full hover:bg-[#25D366] hover:text-white transition-all duration-200 w-fit font-opensans text-[10px] tracking-[0.12em] uppercase">
                   <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" /><path d="M12 0C5.373 0 0 5.373 0 12c0 2.136.561 4.14 1.535 5.877L.057 23.882l6.19-1.454A11.934 11.934 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.93 0-3.734-.5-5.31-1.373l-.38-.225-3.676.864.927-3.588-.247-.392A9.937 9.937 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z" /></svg>
-                  Preguntar
+                  Preguntar por disponibilidad
                 </a>
               </div>
             </motion.article>
