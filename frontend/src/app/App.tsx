@@ -64,10 +64,11 @@ interface Product {
 
 const normalizeProduct = (p: unknown): Product => {
   const prod = p as any;
+  const rawImages = prod.images ?? [];
   return {
     ...prod,
-    rawImages: prod.images ?? [],
-    images: (prod.images ?? []).map(fileUrl),
+    rawImages,
+    images: rawImages.length ? rawImages.map(fileUrl) : [PLACEHOLDER_IMAGE],
   };
 };
 
@@ -234,6 +235,46 @@ const PRODUCTS: Product[] = [
   },
 ];
 
+const PLACEHOLDER_IMAGE =
+  "data:image/svg+xml;charset=UTF-8," +
+  encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="700" height="800" viewBox="0 0 700 800">
+      <defs>
+        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#f2f0ea"/>
+          <stop offset="100%" stop-color="#e3ded3"/>
+        </linearGradient>
+        <linearGradient id="leaf" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#8a9b7d"/>
+          <stop offset="100%" stop-color="#5f7052"/>
+        </linearGradient>
+      </defs>
+
+      <rect width="700" height="800" fill="url(#bg)"/>
+
+      <!-- círculo decorativo detrás (aún más grande) -->
+      <circle cx="350" cy="350" r="240" fill="#ffffff" opacity="0.35"/>
+      <circle cx="350" cy="350" r="195" fill="none" stroke="#5f7052" stroke-width="1.5" opacity="0.25"/>
+
+      <!-- hoja estilizada (escalada 2.3x) -->
+      <g transform="translate(350,350) scale(2.3)">
+        <path d="M0,-70 C45,-55 65,-15 55,25 C45,60 15,72 0,72 C-15,72 -45,60 -55,25 C-65,-15 -45,-55 0,-70 Z"
+              fill="url(#leaf)"/>
+        <path d="M0,-60 C0,-20 0,20 0,68" stroke="#f2f0ea" stroke-width="1.6" fill="none" opacity="0.7"/>
+        <path d="M0,-30 C15,-22 25,-12 28,0" stroke="#f2f0ea" stroke-width="1" fill="none" opacity="0.5"/>
+        <path d="M0,-30 C-15,-22 -25,-12 -28,0" stroke="#f2f0ea" stroke-width="1" fill="none" opacity="0.5"/>
+        <path d="M0,10 C13,17 21,26 24,36" stroke="#f2f0ea" stroke-width="1" fill="none" opacity="0.5"/>
+        <path d="M0,10 C-13,17 -21,26 -24,36" stroke="#f2f0ea" stroke-width="1" fill="none" opacity="0.5"/>
+      </g>
+
+      <!-- texto -->
+      <text x="350" y="660" font-family="'Roboto', sans-serif" font-size="22" letter-spacing="5"
+            fill="#5f7052" text-anchor="middle" opacity="0.75">HÓLTÚN</text>
+      <text x="350" y="694" font-family="'Open Sans', sans-serif" font-size="19"
+            fill="#8a8378" text-anchor="middle">Imagen no disponible</text>
+    </svg>
+  `);
+
 // ─── Motion preset ────────────────────────────────────────────────────────────
 
 const fadeUp = {
@@ -250,29 +291,30 @@ function ImageCarousel({ images, alt, imgClassName, containerClassName }: {
   images: string[]; alt: string; imgClassName?: string; containerClassName?: string;
 }) {
   const [idx, setIdx] = useState(0);
-  if (!images.length) return null;
-  if (images.length === 1) {
+  const safeImages = images.length ? images : [PLACEHOLDER_IMAGE];
+
+  if (safeImages.length === 1) {
     return (
       <div className={containerClassName}>
-        <img src={images[0]} alt={alt} className={imgClassName} />
+        <img src={safeImages[0]} alt={alt} className={imgClassName} />
       </div>
     );
   }
   return (
     <div className={`relative group ${containerClassName ?? ""}`}>
-      <img src={images[idx]} alt={alt} className={imgClassName} />
+      <img src={safeImages[idx]} alt={alt} className={imgClassName} />
       <button
-        onClick={(e) => { e.stopPropagation(); setIdx((idx - 1 + images.length) % images.length); }}
+        onClick={(e) => { e.stopPropagation(); setIdx((idx - 1 + safeImages.length) % safeImages.length); }}
         className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/40 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
         <ChevronLeft size={13} />
       </button>
       <button
-        onClick={(e) => { e.stopPropagation(); setIdx((idx + 1) % images.length); }}
+        onClick={(e) => { e.stopPropagation(); setIdx((idx + 1) % safeImages.length); }}
         className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/40 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
         <ChevronRight size={13} />
       </button>
       <div className="absolute bottom-2 inset-x-0 flex justify-center gap-1 z-10">
-        {images.map((_, i) => (
+        {safeImages.map((_, i) => (
           <button key={i} onClick={(e) => { e.stopPropagation(); setIdx(i); }}
             className={`w-1.5 h-1.5 rounded-full transition-all ${i === idx ? "bg-white" : "bg-white/40"}`} />
         ))}
