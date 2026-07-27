@@ -10,10 +10,17 @@ import {
   UserCircle, Boxes, Plus, Target, Globe,
   Zap, Flower2, FlaskConical, Wind, Amphora,
   TrendingDown, AlertTriangle, CheckCircle2,
-  Pencil, Trash2, Tag, Save,
+  Pencil, Trash2, Tag, Save, Mic,
 } from "lucide-react";
 import logo2 from "@/imports/2.png";
 import logo3 from "@/imports/3.png";
+import hero from "@/imports/IMG1.jpeg"
+import habitarte from "@/imports/habitarte.png"
+import ofrecemos from "@/imports/IMG2.jpeg"
+import impi from "@/imports/IMPI-LOGO.jpg"
+import orgullo from "@/imports/Orgullo-Morelos-Optiprot-Logo-.png"
+import secturismo from "@/imports/secturismo.jpg"
+
 import { productService, categoryService, authService, fileUrl } from "@/app/services/api";
 
 const SUSPICIOUS_PATTERN =
@@ -41,7 +48,7 @@ function validatePassword(value: string): ValidationResult {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Page = "home" | "catalog" | "product" | "admin-gate" | "admin";
+type Page = "home" | "catalog" | "product" | "admin-gate" | "admin" | "therapies";
 type AdminSection = "inventory" | "add-product" | "categories";
 
 interface Category {
@@ -86,20 +93,6 @@ interface FormErrors {
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
-const CATEGORIES: Category[] = [
-  { uuid: "cat-0", name: "Todos" },
-  { uuid: "cat-1", name: "Aceites de grado alimenticio", description: "Aceites naturales de primera calidad para uso culinario" },
-  { uuid: "cat-2", name: "Aceites de grado cosmético", description: "Aceites puros para el cuidado de piel y cabello" },
-  { uuid: "cat-3", name: "Sinergias de aceites esenciales", description: "Blends concentrados de aceites esenciales puros" },
-  { uuid: "cat-4", name: "Sinergias · Línea Holística", description: "Mezclas ceremoniales y de bienestar energético" },
-  { uuid: "cat-5", name: "Aceites para masajes relajantes", description: "Aceites listos para usar en masajes corporales" },
-  { uuid: "cat-6", name: "Sinergias para masajes", description: "Concentrados para diluir en masajes terapéuticos" },
-  { uuid: "cat-7", name: "Sueros faciales", description: "Tratamientos activos para el cuidado facial" },
-  { uuid: "cat-8", name: "Aceites vehiculares", description: "Bases portadoras para dilución de aceites esenciales" },
-  { uuid: "cat-9", name: "Mieles", description: "Mieles artesanales infusionadas con plantas medicinales" },
-  { uuid: "cat-10", name: "Velas", description: "Velas aromáticas de cera de soya con aceites esenciales" },
-];
-
 const CATEGORY_ICONS: Record<string, React.ElementType> = {
   "Todos": Boxes,
   "Aceites de grado alimenticio": Droplets,
@@ -112,6 +105,7 @@ const CATEGORY_ICONS: Record<string, React.ElementType> = {
   "Aceites vehiculares": Amphora,
   "Mieles": Heart,
   "Velas": Flame,
+  "Terapias Holísticas": Flower2,
 };
 
 const I = {
@@ -119,121 +113,16 @@ const I = {
   about: "https://images.unsplash.com/photo-1647892702739-fd6cda128787?w=1200&h=700&fit=crop&auto=format",
   oilPlant: "https://images.unsplash.com/photo-1699373381616-6133334e754e?w=700&h=800&fit=crop&auto=format",
   oilBlanket: "https://images.unsplash.com/photo-1662467191034-9cc663f1de92?w=700&h=800&fit=crop&auto=format",
-  serum: "https://images.unsplash.com/photo-1576426863848-c21f53c60b19?w=700&h=800&fit=crop&auto=format",
-  serumGlass: "https://images.unsplash.com/photo-1679394270597-e90694d70350?w=700&h=800&fit=crop&auto=format",
+  facial: "https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+  corporal: "https://images.unsplash.com/photo-1761718210089-ba3bb5ccb54f?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
   skincare: "https://images.unsplash.com/photo-1613803745799-ba6c10aace85?w=700&h=800&fit=crop&auto=format",
-  honeyJar: "https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?w=700&h=800&fit=crop&auto=format",
+  tanatologico: "https://images.pexels.com/photos/6134941/pexels-photo-6134941.jpeg",
   honeyDip: "https://images.unsplash.com/photo-1641878067318-1d1f79a77785?w=700&h=800&fit=crop&auto=format",
   candle1: "https://images.unsplash.com/photo-1636714507452-48716cfa1818?w=700&h=800&fit=crop&auto=format",
-  candle2: "https://images.unsplash.com/photo-1643122966676-29e8597257f7?w=700&h=800&fit=crop&auto=format",
-  greenPlant: "https://images.unsplash.com/photo-1696362205307-d4612ee26f5d?w=700&h=800&fit=crop&auto=format",
-  leaves: "https://images.unsplash.com/photo-1647892702739-fd6cda128787?w=700&h=800&fit=crop&auto=format",
+  auriculoterapia: "https://plus.unsplash.com/premium_photo-1661869039200-0b1553ced257?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+  masaje: "https://images.unsplash.com/photo-1519824145371-296894a0daa9?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+  acupuntura: "https://images.unsplash.com/photo-1598555763574-dca77e10427e?q=80&w=1197&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
 };
-
-const cat = (uuid: string) => CATEGORIES.find((c) => c.uuid === uuid)!;
-
-const PRODUCTS: Product[] = [
-  {
-    uuid: "prod-1", name: "Aceite de Coco Virgen", categories: [cat("cat-1")],
-    description: "Aceite de coco virgen prensado en frío, de origen orgánico. Ideal para cocinar y repostería saludable.",
-    price: 220, stock: 42, images: [I.oilPlant, I.oilBlanket]
-  },
-  {
-    uuid: "prod-2", name: "Aceite de Oliva Extra Virgen", categories: [cat("cat-1")],
-    description: "Aceite de oliva extra virgen de primera extracción en frío. Excepcional perfil de polifenoles.",
-    price: 280, stock: 7, images: [I.oilBlanket]
-  },
-  {
-    uuid: "prod-3", name: "Aceite de Argán Puro", categories: [cat("cat-2")],
-    description: "Aceite de argán 100% puro, prensado en frío de semillas marroquíes. El 'oro líquido' de la cosmética.",
-    price: 390, stock: 28, images: [I.serumGlass, I.serum]
-  },
-  {
-    uuid: "prod-4", name: "Aceite de Rosa Mosqueta", categories: [cat("cat-2")],
-    description: "Aceite de rosa mosqueta orgánico de Rosa canina. Reconocido por su poder regenerador.",
-    price: 340, stock: 3, images: [I.skincare]
-  },
-  {
-    uuid: "prod-5", name: "Sinergia Relax & Peace", categories: [cat("cat-3")],
-    description: "Blend de lavanda, vetiver y bergamota para inducir calma profunda y meditación.",
-    price: 260, stock: 55, images: [I.greenPlant, I.leaves, I.oilPlant]
-  },
-  {
-    uuid: "prod-6", name: "Sinergia Energía Vital", categories: [cat("cat-3")],
-    description: "Menta, romero y limón para revitalizar mente y cuerpo desde la mañana.",
-    price: 240, stock: 0, images: [I.leaves]
-  },
-  {
-    uuid: "prod-7", name: "Sinergia Chakra Balance", categories: [cat("cat-4")],
-    description: "Blend ancestral de sándalo, incienso, rosa y ylang ylang para los 7 centros de energía.",
-    price: 310, stock: 18, images: [I.serumGlass, I.greenPlant]
-  },
-  {
-    uuid: "prod-8", name: "Sinergia Luna Llena", categories: [cat("cat-4")],
-    description: "Jazmín, salvia, mirra y cedro para ceremonias de luna llena e introspección.",
-    price: 290, stock: 31, images: [I.greenPlant]
-  },
-  {
-    uuid: "prod-9", name: "Masaje Lavanda & Vainilla", categories: [cat("cat-5")],
-    description: "Base de jojoba y almendras con lavanda y vainilla. Textura sedosa, deslizamiento perfecto.",
-    price: 320, stock: 45, images: [I.oilPlant, I.oilBlanket]
-  },
-  {
-    uuid: "prod-10", name: "Masaje Eucalipto & Menta", categories: [cat("cat-5")],
-    description: "Eucalipto y menta para masajes deportivos y recuperación muscular.",
-    price: 300, stock: 2, images: [I.oilBlanket]
-  },
-  {
-    uuid: "prod-11", name: "Sinergia Muscular Profunda", categories: [cat("cat-6")],
-    description: "Romero, gaulteria y pimiento negro concentrados para acción muscular profunda.",
-    price: 270, stock: 16, images: [I.serum]
-  },
-  {
-    uuid: "prod-12", name: "Sinergia Antiestrés Total", categories: [cat("cat-6")],
-    description: "Lavanda, manzanilla romana, neroli y cedro para disolver la tensión acumulada.",
-    price: 285, stock: 22, images: [I.greenPlant, I.serum]
-  },
-  {
-    uuid: "prod-13", name: "Suero Vitamina C Luminoso", categories: [cat("cat-7")],
-    description: "Vitamina C estabilizada al 15% con rosa mosqueta y granada. Luminosidad inmediata.",
-    price: 520, stock: 38, images: [I.serum, I.serumGlass]
-  },
-  {
-    uuid: "prod-14", name: "Suero Regenerador Nocturno", categories: [cat("cat-7")],
-    description: "Bakuchiol, argán y péptidos de seda. Regenera y rejuvenece mientras descansas.",
-    price: 580, stock: 5, images: [I.skincare]
-  },
-  {
-    uuid: "prod-15", name: "Aceite Vehicular de Jojoba", categories: [cat("cat-8")],
-    description: "Jojoba dorada, cera líquida que imita el sebo natural. Base ideal para aceites esenciales.",
-    price: 190, stock: 60, images: [I.serumGlass]
-  },
-  {
-    uuid: "prod-16", name: "Aceite de Almendras Dulces", categories: [cat("cat-8")],
-    description: "Almendras dulces prensadas en frío, suave y profundamente nutritivo. El portador universal.",
-    price: 175, stock: 0, images: [I.oilBlanket, I.oilPlant]
-  },
-  {
-    uuid: "prod-17", name: "Miel Infusionada de Lavanda", categories: [cat("cat-9")],
-    description: "Miel artesanal con flores de lavanda orgánica. Dulzor natural con propiedades calmantes.",
-    price: 160, stock: 25, images: [I.honeyJar, I.honeyDip]
-  },
-  {
-    uuid: "prod-18", name: "Miel de Canela & Jengibre", categories: [cat("cat-9")],
-    description: "Miel artesanal con canela de Ceilán y jengibre fresco. Combinación antiinflamatoria ancestral.",
-    price: 165, stock: 11, images: [I.honeyDip]
-  },
-  {
-    uuid: "prod-19", name: "Vela Sándalo & Cedro", categories: [cat("cat-10")],
-    description: "Cera de soya con sándalo y cedro. Aroma amaderado, cálido y sofisticado.",
-    price: 210, stock: 34, images: [I.candle1, I.candle2]
-  },
-  {
-    uuid: "prod-20", name: "Vela Florece · Jazmín & Neroli", categories: [cat("cat-10")],
-    description: "Cera de soya con jazmín, neroli y rosa damascena. Experiencia floral y delicada.",
-    price: 230, stock: 8, images: [I.candle2]
-  },
-];
 
 const PLACEHOLDER_IMAGE =
   "data:image/svg+xml;charset=UTF-8," +
@@ -274,6 +163,66 @@ const PLACEHOLDER_IMAGE =
             fill="#8a8378" text-anchor="middle">Imagen no disponible</text>
     </svg>
   `);
+
+// ─── Terapias Holísticas (mock, siempre visible) ──────────────────────────────
+
+interface Therapy {
+  slug: string;
+  name: string;
+  benefits: string;
+  image: string;
+}
+
+// ⚠️ Reemplaza estas URLs por fotos reales de las terapias cuando las tengas
+const THERAPIES: Therapy[] = [
+  {
+    slug: "acupuntura",
+    name: "Acupuntura",
+    benefits: "Alivia dolores crónicos, mejora el sistema inmunológico y apoya el tratamiento de diversas enfermedades. Equilibra la energía vital, reduce el estrés y promueve una recuperación más natural y duradera.",
+    image: I.acupuntura,
+  },
+  {
+    slug: "masajes",
+    name: "Masajes",
+    benefits: "Relajan profundamente, liberan tensiones musculares y mejoran la circulación, proporcionando descanso y vitalidad inmediata.",
+    image: I.masaje,
+  },
+  {
+    slug: "auriculoterapia",
+    name: "Auriculoterapia",
+    benefits: "Estimula puntos clave en la oreja para equilibrar emociones, controlar ansiedad y favorecer hábitos saludables de manera natural.",
+    image: I.auriculoterapia,
+  },
+  {
+    slug: "tratamientos-faciales",
+    name: "Tratamientos faciales",
+    benefits: "La radiofrecuencia y microneedling reafirman la piel, reducen líneas de expresión y estimulan la producción de colágeno, logrando un rostro más luminoso y juvenil.",
+    image: I.facial,
+  },
+  {
+    slug: "tratamientos-corporales",
+    name: "Tratamientos corporales",
+    benefits: "Moldean la figura, mejoran la textura de la piel y ayudan a eliminar toxinas, ofreciendo resultados visibles y mayor confianza personal.",
+    image: I.corporal,
+  },
+  {
+    slug: "acompanamiento-tanatologico",
+    name: "Acompañamiento tanatológico",
+    benefits: "Brinda apoyo emocional en procesos de duelo, ayudando a encontrar paz, aceptación y fortaleza para seguir adelante.",
+    image: I.tanatologico,
+  },
+];
+
+// Categoría "falsa" que siempre se muestra junto a las categorías reales del backend.
+// No existe en la BD: su uuid empieza con "mock-" y se detecta así en los onClick.
+const MOCK_THERAPY_CATEGORY: Category = {
+  uuid: "mock-terapias-holisticas",
+  name: "Terapias Holísticas",
+  description: "Terapias que reconectan cuerpo, mente y energía",
+  image: I.oilBlanket, // reemplaza por la foto real del banner cuando la tengas
+};
+
+const isMockCategory = (uuid: string | null | undefined) => uuid === MOCK_THERAPY_CATEGORY.uuid;
 
 // ─── Motion preset ────────────────────────────────────────────────────────────
 
@@ -459,11 +408,11 @@ function Navbar({
 
 // ─── Footer ───────────────────────────────────────────────────────────────────
 
-function Footer({ navigate }: { navigate: (p: Page) => void }) {
+function Footer({ navigate }: { navigate: (p: Page, anchor?: string) => void }) {
   return (
     <footer className="bg-[#475644] dark:bg-[#2d3829] text-white pt-16 pb-8">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
           <div>
             <div className="flex items-center gap-3 mb-5">
               <img src={logo2} alt="Hóltun" className="h-16 w-16 object-contain opacity-90" />
@@ -486,10 +435,11 @@ function Footer({ navigate }: { navigate: (p: Page) => void }) {
           <div>
             <h4 style={{ fontFamily: "'Roboto', sans-serif" }} className="text-[10px] tracking-[0.3em] uppercase text-white/30 mb-5">Explorar</h4>
             <div className="flex flex-col gap-3">
-              {(["Inicio", "Nosotros", "Catálogo"] as const).map((l, i) => {
-                const pages: Page[] = ["home", "home", "catalog"];
+              {(["Inicio", "Nosotros", "Comunidad", "Catálogo"] as const).map((l, i) => {
+                const pages: Page[] = ["home", "home", "home", "catalog"];
+                const anchors: (string | undefined)[] = [undefined, "sobre-nosotros", "comunidad", undefined];
                 return (
-                  <button key={l} onClick={() => navigate(pages[i])}
+                  <button key={l} onClick={() => navigate(pages[i], anchors[i])}
                     className="font-opensans text-sm text-white/55 hover:text-primary transition-colors text-left flex items-center gap-2">
                     {l}
                   </button>
@@ -510,6 +460,23 @@ function Footer({ navigate }: { navigate: (p: Page) => void }) {
                   <span className="font-opensans text-sm text-white/55">{text}</span>
                 </div>
               ))}
+            </div>
+          </div>
+          <div>
+            <h4 style={{ fontFamily: "'Roboto', sans-serif" }} className="text-[10px] tracking-[0.3em] uppercase text-white/30 mb-5">Afiliaciones</h4>
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-3">
+                <img src={orgullo} alt="Orgullo Morelos - Turismo de Bienestar" className="h-12 w-12 object-contain bg-white/90 rounded-lg p-1" />
+                <span className="font-opensans text-sm text-white/55 leading-snug">Orgullo Morelos<br />Turismo de Bienestar</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <img src={secturismo} alt="Turismo de Bienestar" className="h-12 w-12 object-contain bg-white/90 rounded-lg p-1" />
+                <span className="font-opensans text-sm text-white/55 leading-snug">Turismo de Bienestar</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <img src={impi} alt="IMPI" className="h-12 w-12 object-contain bg-white/90 rounded-lg p-1" />
+                <span className="font-opensans text-sm text-white/55 leading-snug">IMPI</span>
+              </div>
             </div>
           </div>
         </div>
@@ -574,7 +541,7 @@ function ProductCard({ product, onClick }: { product: Product; onClick: () => vo
 
 // ─── HomePage (merged with Nosotros) ──────────────────────────────────────────
 
-function HomePage({ navigate }: { navigate: (p: Page) => void }) {
+function HomePage({ navigate }: { navigate: (p: Page, anchor?: string) => void }) {
   const [homeCategories, setHomeCategories] = useState<Category[]>([]);
   const [catsLoading, setCatsLoading] = useState(true);
 
@@ -585,12 +552,33 @@ function HomePage({ navigate }: { navigate: (p: Page) => void }) {
       .finally(() => setCatsLoading(false));
   }, []);
 
+  // La categoría "Terapias Holísticas" es un mock: siempre se agrega al final,
+  // sin depender de la respuesta del backend.
+  const displayCategories = useMemo(
+    () => [...homeCategories, MOCK_THERAPY_CATEGORY],
+    [homeCategories]
+  );
+
+  const PODCAST_URLS = {
+    amazon: "https://music.amazon.com/podcasts/d34764ea-672d-41af-8fb5-9943c0ef3769/habit-arte",
+    apple: "https://podcasts.apple.com/us/podcast/el-amor-en-tiempos-de-filtros/id1896812626?i=1000775267365",
+    spotify: "https://open.spotify.com/show/033mYNbtCHck7reaFpyqrI?si=3b6d18e088af4044",
+  };
+
+  const goToCategory = (cat: Category) => {
+    if (isMockCategory(cat.uuid)) {
+      navigate("therapies");
+    } else {
+      navigate("catalog");
+    }
+  };
+
   return (
     <div>
       {/* ── Hero ── */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0">
-          <img src={I.hero} alt="Naturaleza y bienestar" className="w-full h-full object-cover" />
+          <img src={hero} alt="Naturaleza y bienestar" className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-black/45" />
           <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/60" />
         </div>
@@ -605,11 +593,11 @@ function HomePage({ navigate }: { navigate: (p: Page) => void }) {
             <p className="font-opensans text-[10px] tracking-[0.45em] uppercase text-primary">Centro Holístico</p>
           </motion.div>
           <h1 style={{ fontFamily: "'Roboto', sans-serif" }}
-            className="text-5xl md:text-[72px] font-extralight tracking-wide leading-[1.15] mb-8">
-            Reconecta con tu<br /><em className="not-italic font-light text-white/80">esencia natural</em>
+            className="text-5xl md:text-[60px] font-extralight tracking-wide leading-[1.15] mb-8">
+            El bienestar comienza aquí<br /><em className="not-italic font-light text-white/80">cuando tu vuelves a ti</em>
           </h1>
           <p className="font-opensans text-sm md:text-base text-white/60 max-w-xl mx-auto mb-12 leading-relaxed">
-            Productos naturales de alta calidad elaborados con sabiduría ancestral para restaurar tu equilibrio y bienestar.
+            En HÓLTUN Wellness te acompañamos en un camino de equilibrio y bienestar integral. A través de terapias holísticas, productos naturales y hábitos conscientes, te ayudamos a reconectar con tu cuerpo, tu mente y tu esencia.
           </p>
           <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
             onClick={() => navigate("catalog")}
@@ -625,61 +613,59 @@ function HomePage({ navigate }: { navigate: (p: Page) => void }) {
       </section>
 
       {/* ── Categories showcase ── */}
-      {(catsLoading || homeCategories.length > 0) && (
-        <section className="py-20 bg-secondary">
-          <div className="max-w-7xl mx-auto px-6">
-            <motion.div initial="hidden" whileInView="show" viewport={{ once: true }}
-              variants={{ show: { transition: { staggerChildren: 0.09 } } }}>
-              <motion.div variants={fadeUp} className="text-center mb-14">
-                <div className="flex items-center justify-center gap-2 mb-3">
-                  <Boxes size={14} className="text-primary" />
-                  <p className="font-opensans text-[10px] tracking-[0.4em] uppercase text-primary">Lo que ofrecemos</p>
-                </div>
-                <h2 style={{ fontFamily: "'Roboto', sans-serif" }} className="text-3xl md:text-4xl font-light text-foreground">Nuestras categorías</h2>
-              </motion.div>
-
-              {catsLoading ? (
-                <div className="flex justify-center py-10">
-                  <div className="w-7 h-7 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                  {homeCategories.map((cat) => {
-                    const Icon = CATEGORY_ICONS[cat.name] ?? Package;
-                    return (
-                      <motion.div key={cat.uuid} variants={fadeUp} whileHover={{ y: -5, transition: { duration: 0.22 } }}
-                        onClick={() => navigate("catalog")}
-                        className="group cursor-pointer bg-card rounded-2xl overflow-hidden shadow-sm hover:shadow-lg hover:shadow-primary/10 transition-shadow duration-400">
-                        <div className="h-36 overflow-hidden bg-muted flex items-center justify-center">
-                          {cat.image
-                            ? <img src={cat.image} alt={cat.name} loading="lazy" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                            : <Icon size={36} className="text-primary/20" />
-                          }
-                        </div>
-                        <div className="p-4 text-center">
-                          <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-2">
-                            <Icon size={14} className="text-primary" />
-                          </div>
-                          <p style={{ fontFamily: "'Roboto', sans-serif" }} className="text-sm font-medium text-foreground leading-tight">{cat.name}</p>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              )}
-
-              {!catsLoading && (
-                <motion.div variants={fadeUp} className="text-center mt-12">
-                  <button onClick={() => navigate("catalog")}
-                    className="font-opensans text-[11px] tracking-[0.2em] uppercase bg-primary text-white px-10 py-4 rounded-full hover:bg-accent transition-colors duration-300">
-                    Ver catálogo completo
-                  </button>
-                </motion.div>
-              )}
+      <section className="py-20 bg-secondary">
+        <div className="max-w-7xl mx-auto px-6">
+          <motion.div initial="hidden" whileInView="show" viewport={{ once: true }}
+            variants={{ show: { transition: { staggerChildren: 0.09 } } }}>
+            <motion.div variants={fadeUp} className="text-center mb-14">
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <Boxes size={14} className="text-primary" />
+                <p className="font-opensans text-[10px] tracking-[0.4em] uppercase text-primary">Lo que ofrecemos</p>
+              </div>
+              <h2 style={{ fontFamily: "'Roboto', sans-serif" }} className="text-3xl md:text-4xl font-light text-foreground">Nuestras categorías</h2>
             </motion.div>
-          </div>
-        </section>
-      )}
+
+            {catsLoading ? (
+              <div className="flex justify-center py-10">
+                <div className="w-7 h-7 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                {displayCategories.map((cat) => {
+                  const Icon = CATEGORY_ICONS[cat.name] ?? Package;
+                  return (
+                    <motion.div key={cat.uuid} variants={fadeUp} whileHover={{ y: -5, transition: { duration: 0.22 } }}
+                      onClick={() => goToCategory(cat)}
+                      className="group cursor-pointer bg-card rounded-2xl overflow-hidden shadow-sm hover:shadow-lg hover:shadow-primary/10 transition-shadow duration-400">
+                      <div className="h-36 overflow-hidden bg-muted flex items-center justify-center">
+                        {cat.image
+                          ? <img src={cat.image} alt={cat.name} loading="lazy" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                          : <Icon size={36} className="text-primary/20" />
+                        }
+                      </div>
+                      <div className="p-4 text-center">
+                        <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-2">
+                          <Icon size={14} className="text-primary" />
+                        </div>
+                        <p style={{ fontFamily: "'Roboto', sans-serif" }} className="text-sm font-medium text-foreground leading-tight">{cat.name}</p>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
+
+            {!catsLoading && (
+              <motion.div variants={fadeUp} className="text-center mt-12">
+                <button onClick={() => navigate("catalog")}
+                  className="font-opensans text-[11px] tracking-[0.2em] uppercase bg-primary text-white px-10 py-4 rounded-full hover:bg-accent transition-colors duration-300">
+                  Ver catálogo completo
+                </button>
+              </motion.div>
+            )}
+          </motion.div>
+        </div>
+      </section>
 
       {/* ── Sobre Nosotros (merged) ── */}
       <section id="sobre-nosotros" className="py-28 px-6">
@@ -702,7 +688,7 @@ function HomePage({ navigate }: { navigate: (p: Page) => void }) {
             {/* Image + text block */}
             <motion.div variants={fadeUp} className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center mb-20">
               <div className="rounded-3xl overflow-hidden h-72 md:h-96 bg-muted">
-                <img src={I.about} alt="Hóltún naturaleza" className="w-full h-full object-cover" />
+                <img src={ofrecemos} alt="Hóltún naturaleza" className="w-full h-full object-cover" />
               </div>
               <div>
                 <p style={{ fontFamily: "'Roboto', sans-serif" }} className="text-2xl font-light text-foreground leading-relaxed mb-6">
@@ -767,6 +753,85 @@ function HomePage({ navigate }: { navigate: (p: Page) => void }) {
           </motion.div>
         </div>
       </section>
+
+      {/* ── Únete a nuestra comunidad ── */}
+      <section id="comunidad" className="py-16 px-6">
+        <div className="max-w-5xl mx-auto">
+          <motion.div initial="hidden" whileInView="show" viewport={{ once: true }}
+            variants={{ show: { transition: { staggerChildren: 0.1 } } }}>
+
+            <motion.div variants={fadeUp} className="text-center mb-10">
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <Heart size={14} className="text-primary" />
+                <p className="font-opensans text-[10px] tracking-[0.4em] uppercase text-primary">Comunidad</p>
+              </div>
+              <h2 style={{ fontFamily: "'Roboto', sans-serif" }} className="text-2xl md:text-3xl font-light text-foreground">
+                Únete a Nuestra Comunidad
+              </h2>
+            </motion.div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {/* Podcast card */}
+              <motion.div variants={fadeUp}
+                className="bg-card rounded-2xl p-6 border border-border text-center flex flex-col items-center">
+                <img src={habitarte} alt="Habit-Arte Podcast" className="w-14 h-14 object-cover rounded-full mb-3" />
+                <h3 style={{ fontFamily: "'Roboto', sans-serif" }} className="text-base font-medium text-foreground mb-1">
+                  Escucha nuestro podcast
+                </h3>
+                <p className="font-opensans text-xs text-muted-foreground mb-5">
+                  Historias que inspiran bienestar
+                </p>
+                <div className="flex items-center gap-2">
+                  <a href="https://podcasts.apple.com/us/podcast/el-amor-en-tiempos-de-filtros/id1896812626?i=1000775267365"
+                    target="_blank" rel="noopener noreferrer" title="Apple Music"
+                    className="w-9 h-9 rounded-full border border-border flex items-center justify-center text-muted-foreground/70 hover:border-primary hover:text-primary transition-all duration-300">
+                    <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="currentColor"><path d="M23.997 6.124a9.23 9.23 0 0 0-.24-2.19c-.317-1.31-1.062-2.31-2.18-3.043A5.022 5.022 0 0 0 19.876.312a9.23 9.23 0 0 0-1.877-.253c-.028 0-.056-.007-.084-.012H5.987c-.089.009-.178.021-.267.028a10.32 10.32 0 0 0-1.522.216A5.06 5.06 0 0 0 1.108 2.9a5.033 5.033 0 0 0-.826 1.964 9.4 9.4 0 0 0-.163 1.276c-.007.089-.015.178-.023.267v13.386c.011.135.021.271.029.406a9.29 9.29 0 0 0 .24 1.816 5.036 5.036 0 0 0 3.036 3.556 5.397 5.397 0 0 0 1.879.42c.146.007.291.017.437.026h13.658c.146-.009.291-.019.437-.026a5.397 5.397 0 0 0 1.879-.42 5.036 5.036 0 0 0 3.036-3.556c.101-.454.176-.913.24-1.816.008-.135.018-.271.029-.406V6.124zM12.164 17.42c-.048 1.014-.816 1.83-1.83 1.86a1.923 1.923 0 0 1-1.94-1.86c-.032-.999.75-1.87 1.75-1.9a1.94 1.94 0 0 1 2.02 1.9zm4.6-1.36-6.4 1.36v-8.9l6.4-1.36v8.9z" /></svg>
+                  </a>
+                  <a href="https://open.spotify.com/show/033mYNbtCHck7reaFpyqrI?si=3b6d18e088af4044"
+                    target="_blank" rel="noopener noreferrer" title="Spotify"
+                    className="w-9 h-9 rounded-full border border-border flex items-center justify-center text-muted-foreground/70 hover:border-primary hover:text-primary transition-all duration-300">
+                    <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141 4.32-1.32 9.719-.66 13.439 1.62.361.181.54.78.301 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.6.18-1.2.72-1.38 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.42 1.56-.299.421-1.02.599-1.559.3z" /></svg>
+                  </a>
+                  <a href="https://music.amazon.com/podcasts/d34764ea-672d-41af-8fb5-9943c0ef3769/habit-arte"
+                    target="_blank" rel="noopener noreferrer" title="Amazon Music"
+                    className="w-9 h-9 rounded-full border border-border flex items-center justify-center text-muted-foreground/70 hover:border-primary hover:text-primary transition-all duration-300">
+                    <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="currentColor"><path d="M17.34 15.93c-1.68 1.24-4.11 1.9-6.2 1.9-2.93 0-5.57-1.08-7.57-2.89-.16-.14-.02-.34.17-.23 2.16 1.26 4.83 2.02 7.6 2.02 1.86 0 3.91-.39 5.79-1.18.28-.12.52.19.21.38zm.72-.82c-.21-.27-1.4-.13-1.94-.06-.16.02-.19-.12-.04-.23 1-.7 2.63-.5 2.82-.26.19.24-.05 1.87-1 2.65-.14.12-.28.06-.22-.1.21-.53.68-1.72.38-2z" /><circle cx="12" cy="8" r="3.5" /></svg>
+                  </a>
+                </div>
+              </motion.div>
+
+              {/* Social media card */}
+              <motion.div variants={fadeUp}
+                className="bg-card rounded-2xl p-6 border border-border text-center flex flex-col items-center justify-center">
+                <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+                  <Sparkles size={15} className="text-primary" />
+                </div>
+                <h3 style={{ fontFamily: "'Roboto', sans-serif" }} className="text-base font-medium text-foreground mb-1">
+                  Síguenos en redes
+                </h3>
+                <p className="font-opensans text-xs text-muted-foreground mb-5">
+                  Tips, novedades y bienestar
+                </p>
+                <div className="flex items-center gap-2">
+                  <a href="https://www.instagram.com/holtun_wellness/" target="_blank" rel="noopener noreferrer" title="Instagram"
+                    className="w-9 h-9 rounded-full border border-border flex items-center justify-center text-muted-foreground/70 hover:border-primary hover:text-primary transition-all duration-300">
+                    <Instagram size={14} />
+                  </a>
+                  <a href="https://www.facebook.com/profile.php?id=61573087637224&locale=es_LA" target="_blank" rel="noopener noreferrer" title="Facebook"
+                    className="w-9 h-9 rounded-full border border-border flex items-center justify-center text-muted-foreground/70 hover:border-primary hover:text-primary transition-all duration-300">
+                    <Facebook size={14} />
+                  </a>
+                  <a href="https://wa.me/525516905076?text=Hola%2C%20me%20gustar%C3%ADa%20unirme%20a%20la%20comunidad%20Holtún."
+                    target="_blank" rel="noopener noreferrer" title="WhatsApp"
+                    className="w-9 h-9 rounded-full border border-border flex items-center justify-center text-muted-foreground/70 hover:border-primary hover:text-primary transition-all duration-300">
+                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" /><path d="M12 0C5.373 0 0 5.373 0 12c0 2.136.561 4.14 1.535 5.877L.057 23.882l6.19-1.454A11.934 11.934 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.93 0-3.734-.5-5.31-1.373l-.38-.225-3.676.864.927-3.588-.247-.392A9.937 9.937 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z" /></svg>
+                  </a>
+                </div>
+              </motion.div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
     </div>
   );
 }
@@ -806,6 +871,12 @@ function CatalogPage({ navigate, setProduct }: { navigate: (p: Page) => void; se
       .then((cats) => setCategories(cats.map(normalizeCategory)))
       .catch(() => setCategories([]));
   }, []);
+
+  // Categorías reales + la mock "Terapias Holísticas" al final, para sidebar/chips.
+  const displayCategories = useMemo(
+    () => [...categories, MOCK_THERAPY_CATEGORY],
+    [categories]
+  );
 
   useEffect(() => {
     productService.getFiltered({ page: 0, size: 1 })
@@ -856,6 +927,16 @@ function CatalogPage({ navigate, setProduct }: { navigate: (p: Page) => void; se
     setOnlyInStock(false);
   };
 
+  // Si se selecciona la categoría mock, redirige a la página de terapias
+  // en vez de intentar filtrar productos por ella.
+  const selectCategory = (uuid: string | null) => {
+    if (isMockCategory(uuid)) {
+      navigate("therapies");
+      return;
+    }
+    setActiveCategoryUuid(uuid);
+  };
+
   return (
     <div className="min-h-screen pt-28 pb-24">
       <div className="max-w-7xl mx-auto px-6">
@@ -892,9 +973,8 @@ function CatalogPage({ navigate, setProduct }: { navigate: (p: Page) => void; se
             onClick={() => setOnlyInStock(!onlyInStock)}
             className="flex items-center gap-2 font-opensans text-xs text-muted-foreground cursor-pointer select-none"
           >
-            <div className={`w-4 h-4 rounded flex items-center justify-center border transition-all shrink-0 ${
-              onlyInStock ? "bg-primary border-primary" : "border-border"
-            }`}>
+            <div className={`w-4 h-4 rounded flex items-center justify-center border transition-all shrink-0 ${onlyInStock ? "bg-primary border-primary" : "border-border"
+              }`}>
               {onlyInStock && <Check size={10} className="text-white" />}
             </div>
             Solo disponibles
@@ -909,20 +989,20 @@ function CatalogPage({ navigate, setProduct }: { navigate: (p: Page) => void; se
 
         <div className="flex gap-8">
           {/* Sidebar categorías */}
-          {categories.length > 0 && (
+          {displayCategories.length > 0 && (
             <aside className="hidden md:block w-56 shrink-0">
               <div className="bg-card border border-border rounded-2xl p-3 sticky top-28">
                 <p className="font-opensans text-[9px] tracking-[0.3em] uppercase text-muted-foreground px-2 py-2 mb-1">Categorías</p>
                 <div className="space-y-0.5">
-                  <button onClick={() => setActiveCategoryUuid(null)}
+                  <button onClick={() => selectCategory(null)}
                     className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-all duration-200 ${activeCategoryUuid === null ? "bg-primary text-white shadow-sm shadow-primary/20" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
                     <Boxes size={13} className="shrink-0" />
                     <span className="font-opensans text-xs leading-tight">Todos</span>
                   </button>
-                  {categories.map((c) => {
+                  {displayCategories.map((c) => {
                     const Icon = CATEGORY_ICONS[c.name] ?? Package;
                     return (
-                      <button key={c.uuid} onClick={() => setActiveCategoryUuid(c.uuid)}
+                      <button key={c.uuid} onClick={() => selectCategory(c.uuid)}
                         className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-all duration-200 ${activeCategoryUuid === c.uuid ? "bg-primary text-white shadow-sm shadow-primary/20" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
                         <Icon size={13} className="shrink-0" />
                         <span className="font-opensans text-xs leading-tight">{c.name}</span>
@@ -937,16 +1017,16 @@ function CatalogPage({ navigate, setProduct }: { navigate: (p: Page) => void; se
           {/* Main */}
           <div className="flex-1 min-w-0">
             {/* Chips móvil */}
-            {categories.length > 0 && (
+            {displayCategories.length > 0 && (
               <div className="flex md:hidden flex-wrap gap-2 mb-5">
-                <button onClick={() => setActiveCategoryUuid(null)}
+                <button onClick={() => selectCategory(null)}
                   className={`font-opensans text-[10px] tracking-wide px-3.5 py-2 rounded-full border transition-all flex items-center gap-1.5 ${activeCategoryUuid === null ? "bg-primary border-primary text-white shadow-sm shadow-primary/20" : "bg-card border-border text-muted-foreground hover:border-primary/40 hover:text-primary"}`}>
                   <Boxes size={10} /> Todos
                 </button>
-                {categories.map((c) => {
+                {displayCategories.map((c) => {
                   const Icon = CATEGORY_ICONS[c.name] ?? Package;
                   return (
-                    <button key={c.uuid} onClick={() => setActiveCategoryUuid(c.uuid)}
+                    <button key={c.uuid} onClick={() => selectCategory(c.uuid)}
                       className={`font-opensans text-[10px] tracking-wide px-3.5 py-2 rounded-full border transition-all flex items-center gap-1.5 ${activeCategoryUuid === c.uuid ? "bg-primary border-primary text-white shadow-sm shadow-primary/20" : "bg-card border-border text-muted-foreground hover:border-primary/40 hover:text-primary"}`}>
                       <Icon size={10} /> {c.name}
                     </button>
@@ -1123,6 +1203,114 @@ function ProductPage({ product, navigate }: { product: Product; navigate: (p: Pa
           </motion.div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ─── TherapiesPage (Terapias Holísticas) ──────────────────────────────────────
+
+function TherapiesPage({ navigate }: { navigate: (p: Page) => void }) {
+  const WA_AGENDA = "https://wa.me/525516905076?text=" +
+    encodeURIComponent("Hola, me gustaría agendar una experiencia de terapias holísticas.");
+
+  const heroPoints = [
+    { Icon: Sun, label: "Equilibra tu energía" },
+    { Icon: Leaf, label: "Reduce el estrés" },
+    { Icon: Moon, label: "Mejora tu descanso" },
+    { Icon: Heart, label: "Fortalece tu bienestar" },
+  ];
+
+  return (
+    <div className="min-h-screen pt-24 pb-24">
+      <div className="max-w-7xl mx-auto px-6">
+        <button onClick={() => navigate("home")}
+          className="font-opensans text-[10px] tracking-[0.18em] uppercase text-muted-foreground hover:text-primary flex items-center gap-2 mb-10 transition-colors group">
+          <ArrowLeft size={12} className="transition-transform group-hover:-translate-x-0.5" /> Volver al inicio
+        </button>
+      </div>
+
+      {/* ── Hero ── */}
+      <section className="max-w-7xl mx-auto px-6 mb-20">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
+          className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-0 rounded-3xl overflow-hidden border border-border bg-card">
+          <div className="h-64 lg:h-full">
+            <img src={ofrecemos} alt="Terapias holísticas"
+              className="w-full h-full object-cover" />
+          </div>
+          <div className="p-8 md:p-12 flex flex-col justify-center">
+            <h1 style={{ fontFamily: "'Roboto', sans-serif" }}
+              className="text-3xl md:text-4xl font-light text-foreground leading-tight mb-1">
+              Terapias que reconectan
+            </h1>
+            <p style={{ fontFamily: "'Roboto', sans-serif" }}
+              className="text-3xl md:text-4xl italic font-light text-primary mb-6">
+              cuerpo, mente y energía
+            </p>
+            <p className="font-opensans text-sm text-muted-foreground leading-relaxed mb-8 max-w-md">
+              Cada sesión es personalizada y diseñada para ayudarte a liberar tensiones,
+              restaurar tu equilibrio y mejorar tu bienestar físico y emocional.
+            </p>
+            <a href={WA_AGENDA} target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-primary text-white px-8 py-3.5 rounded-full hover:bg-accent transition-colors w-fit font-opensans text-[11px] tracking-[0.18em] uppercase mb-8">
+              Agenda tu experiencia
+            </a>
+            <div className="grid grid-cols-2 gap-4">
+              {heroPoints.map((p) => (
+                <div key={p.label} className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <p.Icon size={14} className="text-primary" />
+                  </div>
+                  <span className="font-opensans text-xs text-foreground">{p.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* ── Grid de terapias ── */}
+      <section className="max-w-7xl mx-auto px-6">
+        <div className="mb-10">
+          <div className="flex items-center gap-2 mb-3">
+            <Flower2 size={14} className="text-primary" />
+            <p className="font-opensans text-[10px] tracking-[0.4em] uppercase text-primary">Terapias Holísticas</p>
+          </div>
+          <h2 style={{ fontFamily: "'Roboto', sans-serif" }} className="text-3xl md:text-4xl font-light text-foreground">
+            Nuestras terapias
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {THERAPIES.map((t, i) => (
+            <motion.article key={t.slug}
+              initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: Math.min(i * 0.06, 0.3) }}
+              whileHover={{ y: -5, transition: { duration: 0.25 } }}
+              className="bg-card rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-primary/8 transition-shadow duration-500 flex flex-col"
+            >
+              <div className="h-52 bg-muted overflow-hidden">
+                <img src={t.image} alt={t.name}
+                  className="w-full h-full object-cover transition-transform duration-700 hover:scale-105" />
+              </div>
+              <div className="p-6 flex flex-col flex-1">
+                <h3 style={{ fontFamily: "'Roboto', sans-serif" }} className="text-lg font-medium text-foreground mb-2.5">
+                  {t.name}
+                </h3>
+                <p className="font-opensans text-xs text-muted-foreground leading-relaxed mb-5 flex-1">
+                  {t.benefits}
+                </p>
+                <a
+                  href={`https://wa.me/525516905076?text=${encodeURIComponent(`Hola, me gustaría más información sobre la terapia: ${t.name}`)}`}
+                  target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 bg-[#25D366]/10 text-[#25D366] px-4 py-2 rounded-full hover:bg-[#25D366] hover:text-white transition-all duration-200 w-fit font-opensans text-[10px] tracking-[0.12em] uppercase">
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" /><path d="M12 0C5.373 0 0 5.373 0 12c0 2.136.561 4.14 1.535 5.877L.057 23.882l6.19-1.454A11.934 11.934 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.93 0-3.734-.5-5.31-1.373l-.38-.225-3.676.864.927-3.588-.247-.392A9.937 9.937 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z" /></svg>
+                  Preguntar
+                </a>
+              </div>
+            </motion.article>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
@@ -2470,6 +2658,7 @@ export default function App() {
           {page === "home" && <HomePage navigate={navigate} />}
           {page === "catalog" && <CatalogPage navigate={navigate} setProduct={setSelectedProduct} />}
           {page === "product" && selectedProduct && <ProductPage product={selectedProduct} navigate={navigate} />}
+          {page === "therapies" && <TherapiesPage navigate={navigate} />}
           {page === "admin-gate" && <AdminGatePage navigate={navigate} />}
           {page === "admin" && <AdminPanel navigate={navigate} isDark={isDark} toggleDark={() => setIsDark(!isDark)} />}
         </motion.div>
