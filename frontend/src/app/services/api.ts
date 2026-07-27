@@ -3,9 +3,10 @@ import axios from "axios";
 // ─── Cliente base ─────────────────────────────────────────────────────────────
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8088/api/";
+const normalizedBaseUrl = BASE_URL.endsWith("/") ? BASE_URL : `${BASE_URL}/`;
 
 const client = axios.create({
-  baseURL: BASE_URL,
+  baseURL: normalizedBaseUrl,
   timeout: 15_000,
   headers: { Accept: "application/json" },
 });
@@ -19,6 +20,9 @@ client.interceptors.request.use((config) => {
 client.interceptors.response.use(
   (response) => response,
   (error) => {
+    if (error.code === "ECONNABORTED") {
+      console.warn("La petición superó el tiempo de espera (posible cold start del backend)");
+    }
     if (error.response?.status === 401) localStorage.removeItem("holtun_token");
     return Promise.reject(error);
   }
@@ -29,7 +33,7 @@ client.interceptors.response.use(
 export const fileUrl = (path: string): string => {
   if (path.startsWith("http")) return path;
   const relative = path.replace(/^\/uploads\//, "");
-  return `${BASE_URL}files/${relative}`;
+  return `${normalizedBaseUrl}files/${relative}`;
 };
 
 // ─── DTOs ─────────────────────────────────────────────────────────────────────
@@ -248,7 +252,7 @@ export const categoryService = {
 
 export const fileService = {
   getUrl: (entityUuid: string, filename: string): string =>
-    `${BASE_URL}files/${entityUuid}/${filename}`,
+    `${normalizedBaseUrl}files/${entityUuid}/${filename}`,
 };
 
 export default client;
